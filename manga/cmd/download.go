@@ -18,9 +18,11 @@ import (
 	"fmt"
 	"os"
 	"strconv"
+	"strings"
 
 	"bitbucket.org/zwzn/manga/site"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 // downloadCmd represents the download command
@@ -34,12 +36,36 @@ var downloadCmd = &cobra.Command{
 		url := args[0]
 		fmt.Printf("download %s\n", url)
 
+		malID := cmd.Flag("mal-id").Value.String()
 		from, err := strconv.ParseInt(cmd.Flag("from").Value.String(), 10, 64)
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)
 		}
-		site.Download(url, cmd.Flag("mal-id").Value.String(), from)
+
+		if cmd.Flag("save").Value.String() == "true" {
+			newSeries := true
+			saves := viper.GetStringSlice("save")
+			for i := range saves {
+				save := strings.Split(saves[i], ",")
+				if strings.Trim(save[0], " ") == url {
+					save[2] = fmt.Sprint(from)
+					save[1] = malID
+					saves[i] = strings.Join(save, ", ")
+				}
+				newSeries = false
+			}
+			if newSeries {
+				saves = append(saves, fmt.Sprintf("%s, %s, %d", url, malID, from))
+			}
+			viper.Set("save", saves)
+			err = viper.WriteConfig()
+			if err != nil {
+				fmt.Printf("Error saving config: %v", err)
+				os.Exit(1)
+			}
+		}
+		site.Download(url, malID, from)
 	},
 }
 
@@ -48,4 +74,5 @@ func init() {
 
 	downloadCmd.Flags().IntP("mal-id", "m", 0, "the mal id to be use for sites that dont have one")
 	downloadCmd.Flags().IntP("from", "f", 0, "the chapter to start downloading, inclusive")
+	downloadCmd.Flags().BoolP("save", "s", false, "save the series to get new chapters on update")
 }

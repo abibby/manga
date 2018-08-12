@@ -41,7 +41,6 @@ func chapterExists(book *comicbox.Book) bool {
 func saveChapter(book *comicbox.Book) error {
 	folder := folder(book)
 	os.MkdirAll(folder, 0777)
-
 	for i, image := range book.ImageURLs {
 		err := saveFile(image, fp.Join(folder, fmt.Sprintf("%03d%s", i, fp.Ext(image))))
 		if err != nil {
