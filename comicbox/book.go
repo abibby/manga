@@ -48,7 +48,7 @@ func (b *Book) Name() string {
 		name += fmt.Sprintf(" V%d", b.Volume)
 	}
 	if b.Number != 0 {
-		name += fmt.Sprintf(" #%f", b.Number)
+		name += fmt.Sprintf(" #%.0f", b.Number)
 	}
 	if b.Volume == 0 && b.Number == 0 {
 		name += " " + b.Title
