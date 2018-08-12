@@ -43,7 +43,7 @@ func saveChapter(book *comicbox.Book) error {
 	os.MkdirAll(folder, 0777)
 
 	for i, image := range book.ImageURLs {
-		err := saveFile(image, fp.Join(folder, fmt.Sprint(i, fp.Ext(image))))
+		err := saveFile(image, fp.Join(folder, fmt.Sprintf("%03d%s", i, fp.Ext(image))))
 		if err != nil {
 			return err
 		}
