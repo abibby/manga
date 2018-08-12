@@ -16,6 +16,8 @@ package cmd
 
 import (
 	"fmt"
+	"os"
+	"strconv"
 
 	"bitbucket.org/zwzn/manga/site"
 	"github.com/spf13/cobra"
@@ -31,7 +33,13 @@ var downloadCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		url := args[0]
 		fmt.Printf("download %s\n", url)
-		site.Download(url, cmd.Flag("mal-id").Value.String())
+
+		from, err := strconv.ParseInt(cmd.Flag("from").Value.String(), 10, 64)
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
+		site.Download(url, cmd.Flag("mal-id").Value.String(), from)
 	},
 }
 
@@ -39,4 +47,5 @@ func init() {
 	rootCmd.AddCommand(downloadCmd)
 
 	downloadCmd.Flags().IntP("mal-id", "m", 0, "the mal id to be use for sites that dont have one")
+	downloadCmd.Flags().IntP("from", "f", 0, "the chapter to start downloading, inclusive")
 }

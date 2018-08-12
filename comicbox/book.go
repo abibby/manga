@@ -43,7 +43,17 @@ func (t JSONTime) MarshalJSON() ([]byte, error) {
 }
 
 func (b *Book) Name() string {
-	return fmt.Sprintf("%s V%d #%.0f", b.Series, b.Volume, b.Number)
+	name := b.Series
+	if b.Volume != 0 {
+		name += fmt.Sprintf(" V%d", b.Volume)
+	}
+	if b.Number != 0 {
+		name += fmt.Sprintf(" #%f", b.Number)
+	}
+	if b.Volume == 0 && b.Number == 0 {
+		name += " " + b.Title
+	}
+	return name
 }
 
 func (b *Book) Upload(path string) error {

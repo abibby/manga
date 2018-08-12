@@ -125,7 +125,7 @@ var langs = map[string]string{
 	"vi": "vn",
 }
 
-func mangaDexDownload(rawurl, malID string) error {
+func mangaDexDownload(rawurl, malID string, from int64) error {
 	u, _ := url.Parse(rawurl)
 	parts := strings.Split(u.Path, "/")
 
@@ -159,7 +159,7 @@ func mangaDexDownload(rawurl, malID string) error {
 			book.Volume, _ = strconv.ParseInt(ch.Volume, 10, 64)
 			book.DateReleased = comicbox.JSONTime(time.Unix(ch.Timestamp, 0))
 
-			if !chapterExists(book) {
+			if book.Number >= float64(from) && !chapterExists(book) {
 				mangaDexDownloadChapter(series, id, malID, book)
 			}
 		}

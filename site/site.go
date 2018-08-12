@@ -19,12 +19,12 @@ var client = &http.Client{Timeout: 10 * time.Second}
 type MALInfo struct {
 }
 
-func Download(url, malID string) {
+func Download(url, malID string, from int64) {
 
 	url = strings.Replace(url, "https://", "", 1)
 
 	if strings.HasPrefix(url, "mangadex.org") {
-		mangaDexDownload("https://"+url, malID)
+		mangaDexDownload("https://"+url, malID, from)
 	}
 }
 func folder(book *comicbox.Book) string {
@@ -73,7 +73,5 @@ func saveChapter(book *comicbox.Book) error {
 			return err
 		}
 	}
-	fmt.Printf("%#v\n", book)
-	os.Exit(1)
 	return nil
 }
