@@ -19,13 +19,19 @@ var client = &http.Client{Timeout: 10 * time.Second}
 type MALInfo struct {
 }
 
-func Download(url, malID string, from int64) {
+func Download(url string, from int64) error {
 
 	url = strings.Replace(url, "https://", "", 1)
 
 	if strings.HasPrefix(url, "mangadex.org") {
-		mangaDexDownload("https://"+url, malID, from)
+		err := mangaDexDownload("https://"+url, from)
+		if err != nil {
+			return err
+		}
+	} else {
+		fmt.Printf("no downloader for %s\n", url)
 	}
+	return nil
 }
 func folder(book *comicbox.Book) string {
 	path := viper.GetString("dir")
@@ -47,7 +53,6 @@ func saveChapter(book *comicbox.Book) error {
 			return err
 		}
 	}
-
 	b, err := json.Marshal(book)
 	if err != nil {
 		return err

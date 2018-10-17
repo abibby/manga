@@ -10,10 +10,11 @@ import (
 	"strings"
 	"time"
 
+	"github.com/PuerkitoBio/goquery"
+
 	"github.com/spf13/viper"
 
 	"bitbucket.org/zwzn/manga/comicbox"
-	"bitbucket.org/zwzn/mangadownload/mal"
 )
 
 type MangaDexSeries struct {
@@ -125,7 +126,7 @@ var langs = map[string]string{
 	"vi": "vn",
 }
 
-func mangaDexDownload(rawurl, malID string, from int64) error {
+func mangaDexDownload(rawurl string, from int64) error {
 	u, _ := url.Parse(rawurl)
 	parts := strings.Split(u.Path, "/")
 
@@ -133,14 +134,44 @@ func mangaDexDownload(rawurl, malID string, from int64) error {
 		return fmt.Errorf("invalid url: not enough parts")
 	}
 
-	if parts[1] != "manga" {
-		return fmt.Errorf("invalid url: not a series")
+	switch parts[1] {
+	case "manga", "title":
+		return mangaDexDownloadSeries(parts[2], from)
+	case "list":
+		return mangaDexDownloadList(parts[2])
 	}
 
-	apiURL := fmt.Sprintf("https://mangadex.org/api/manga/%s", parts[2])
+	return fmt.Errorf("invalid url: not a series or list")
+
+}
+
+func mangaDexDownloadList(id string) error {
+	doc, err := goquery.NewDocument(fmt.Sprintf("https://mangadex.org/list/%s", id))
+	if err != nil {
+		return err
+	}
+
+	links := doc.Find("a.manga_title")
+
+	links.Each(func(i int, link *goquery.Selection) {
+		href, ok := link.Attr("href")
+		if !ok {
+			return
+		}
+		mangaDexDownload(fmt.Sprintf("https://mangadex.org%s\n", href), 0)
+	})
+	return nil
+}
+
+func mangaDexDownloadSeries(id string, from int64) error {
+
+	apiURL := fmt.Sprintf("https://mangadex.org/api/manga/%s", id)
 
 	series := &MangaDexSeries{}
-	getJson(apiURL, series)
+	err := getJson(apiURL, series)
+	if err != nil {
+		return err
+	}
 
 	vLang := viper.GetString("language")
 	lang, ok := langs[vLang]
@@ -160,32 +191,37 @@ func mangaDexDownload(rawurl, malID string, from int64) error {
 			book.DateReleased = comicbox.JSONTime(time.Unix(ch.Timestamp, 0))
 
 			if book.Number >= float64(from) && !chapterExists(book) {
-				mangaDexDownloadChapter(series, id, malID, book)
+				err = mangaDexDownloadChapter(series, id, book)
+				if err != nil {
+					fmt.Printf("error downloading chapter: %v", err)
+				}
 			}
 		}
 	}
 	return nil
 }
 
-func mangaDexDownloadChapter(series *MangaDexSeries, id int64, malID string, book *comicbox.Book) {
+func mangaDexDownloadChapter(series *MangaDexSeries, id int64, book *comicbox.Book) error {
 	chapter := &MangaDexChapter{}
 	getJson(fmt.Sprintf("https://mangadex.org/api/chapter/%d", id), chapter)
 
 	book.ImageURLs = chapter.ImageURLs()
 
-	if malID != "0" {
-		malData, err := mal.GetManga(malID)
-		if err == nil {
-			book.Summary = malData.Synopsis
-			book.CommunityRating = malData.Score
-			book.Genre = strings.Join(malData.Genres, ",")
-			book.Web = fmt.Sprintf("https://myanimelist.net/manga/%s", malID)
-		}
-	}
+	// if malID != "0" {
+	// 	malData, err := mal.GetManga(malID)
+	// 	if err == nil {
+	// 		book.Summary = malData.Synopsis
+	// 		book.CommunityRating = malData.Score
+	// 		book.Genre = strings.Join(malData.Genres, ",")
+	// 		book.Web = fmt.Sprintf("https://myanimelist.net/manga/%s", malID)
+	// 	}
+	// }
+	log.Printf("saving chapter %s\n", book.Name())
 	err := saveChapter(book)
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
+	return nil
 }
 
 func getJson(url string, target interface{}) error {
