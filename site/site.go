@@ -45,6 +45,7 @@ func chapterExists(book *comicbox.Book) bool {
 }
 
 func saveChapter(book *comicbox.Book) error {
+	fmt.Printf("saving chapter %s\n", book.Name())
 	folder := folder(book)
 	os.MkdirAll(folder, 0777)
 	for i, image := range book.ImageURLs {
@@ -71,7 +72,7 @@ func saveChapter(book *comicbox.Book) error {
 
 	uploadPath := viper.GetString("upload-path")
 	if uploadPath != "" {
-		fmt.Printf("uploading %s\n", book.Name())
+		fmt.Printf(" uploading %s\n", book.Name())
 		err = book.Upload(uploadPath)
 		if err != nil {
 			return err

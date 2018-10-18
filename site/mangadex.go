@@ -3,7 +3,6 @@ package site
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/url"
 	"path/filepath"
 	"strconv"
@@ -11,6 +10,8 @@ import (
 	"time"
 
 	"github.com/PuerkitoBio/goquery"
+	"golang.org/x/text/transform"
+	"golang.org/x/text/unicode/norm"
 
 	"github.com/spf13/viper"
 
@@ -183,9 +184,9 @@ func mangaDexDownloadSeries(id string, from int64) error {
 		if ch.LangCode == lang {
 
 			book := &comicbox.Book{}
-			book.Author = series.Manga.Author
-			book.Series = series.Manga.Title
-			book.Title = ch.Title
+			book.Author = stripCtlAndExtFromUnicode(series.Manga.Author)
+			book.Series = stripCtlAndExtFromUnicode(series.Manga.Title)
+			book.Title = stripCtlAndExtFromUnicode(ch.Title)
 			book.Number, _ = strconv.ParseFloat(ch.Chapter, 64)
 			book.Volume, _ = strconv.ParseInt(ch.Volume, 10, 64)
 			book.DateReleased = comicbox.JSONTime(time.Unix(ch.Timestamp, 0))
@@ -199,6 +200,20 @@ func mangaDexDownloadSeries(id string, from int64) error {
 		}
 	}
 	return nil
+}
+
+// https://rosettacode.org/wiki/Strip_control_codes_and_extended_characters_from_a_string#Go
+func stripCtlAndExtFromUnicode(str string) string {
+	isOk := func(r rune) bool {
+		return r < 32 || r >= 127
+	}
+	// The isOk filter is such that there is no need to chain to norm.NFC
+	t := transform.Chain(norm.NFKD, transform.RemoveFunc(isOk))
+	// This Transformer could also trivially be applied as an io.Reader
+	// or io.Writer filter to automatically do such filtering when reading
+	// or writing data anywhere.
+	str, _, _ = transform.String(t, str)
+	return str
 }
 
 func mangaDexDownloadChapter(series *MangaDexSeries, id int64, book *comicbox.Book) error {
@@ -216,7 +231,6 @@ func mangaDexDownloadChapter(series *MangaDexSeries, id int64, book *comicbox.Bo
 	// 		book.Web = fmt.Sprintf("https://myanimelist.net/manga/%s", malID)
 	// 	}
 	// }
-	log.Printf("saving chapter %s\n", book.Name())
 	err := saveChapter(book)
 	if err != nil {
 		return err
