@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/url"
 	"path/filepath"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -18,33 +19,37 @@ import (
 	"bitbucket.org/zwzn/manga/comicbox"
 )
 
+type MangaDexSeriesChapter struct {
+	ID         int64   `json:"id"`
+	Volume     string  `json:"volume"`
+	Chapter    string  `json:"chapter"`
+	Title      string  `json:"title"`
+	LangCode   string  `json:"lang_code"`
+	GroupID    int64   `json:"group_id"`
+	GroupName  string  `json:"group_name"`
+	GroupID2   int64   `json:"group_id_2"`
+	GroupName2 *string `json:"group_name_2"`
+	GroupID3   int64   `json:"group_id_3"`
+	GroupName3 *string `json:"group_name_3"`
+	Timestamp  int64   `json:"timestamp"`
+}
+type MangaDexManga struct {
+	CoverURL    string  `json:"cover_url"`
+	Description string  `json:"description"`
+	Title       string  `json:"title"`
+	Artist      string  `json:"artist"`
+	Author      string  `json:"author"`
+	Status      int64   `json:"status"`
+	Genres      []int64 `json:"genres"`
+	LastChapter string  `json:"last_chapter"`
+	LangName    string  `json:"lang_name"`
+	LangFlag    string  `json:"lang_flag"`
+}
+
 type MangaDexSeries struct {
-	Manga struct {
-		CoverURL    string  `json:"cover_url"`
-		Description string  `json:"description"`
-		Title       string  `json:"title"`
-		Artist      string  `json:"artist"`
-		Author      string  `json:"author"`
-		Status      int64   `json:"status"`
-		Genres      []int64 `json:"genres"`
-		LastChapter string  `json:"last_chapter"`
-		LangName    string  `json:"lang_name"`
-		LangFlag    string  `json:"lang_flag"`
-	}
-	Chapter map[int64]struct {
-		Volume     string  `json:"volume"`
-		Chapter    string  `json:"chapter"`
-		Title      string  `json:"title"`
-		LangCode   string  `json:"lang_code"`
-		GroupID    int64   `json:"group_id"`
-		GroupName  string  `json:"group_name"`
-		GroupID2   int64   `json:"group_id_2"`
-		GroupName2 *string `json:"group_name_2"`
-		GroupID3   int64   `json:"group_id_3"`
-		GroupName3 *string `json:"group_name_3"`
-		Timestamp  int64   `json:"timestamp"`
-	}
-	Status string `json:"status"`
+	Manga   *MangaDexManga                   `json:"manga"`
+	Chapter map[int64]*MangaDexSeriesChapter `json:"chapter"`
+	Status  string                           `json:"status"`
 }
 
 func (s *MangaDexSeries) ChapterURLs() []string {
@@ -180,26 +185,55 @@ func mangaDexDownloadSeries(id string, from int64) error {
 		lang = vLang
 	}
 
-	for id, ch := range series.Chapter {
-		if ch.LangCode == lang {
+	for _, ch := range sortChapters(series.Chapter) {
+		if ch.LangCode != lang {
+			continue
+		}
 
-			book := &comicbox.Book{}
-			book.Author = stripCtlAndExtFromUnicode(series.Manga.Author)
-			book.Series = stripCtlAndExtFromUnicode(series.Manga.Title)
-			book.Title = stripCtlAndExtFromUnicode(ch.Title)
-			book.Number, _ = strconv.ParseFloat(ch.Chapter, 64)
-			book.Volume, _ = strconv.ParseInt(ch.Volume, 10, 64)
-			book.DateReleased = comicbox.JSONTime(time.Unix(ch.Timestamp, 0))
+		if ch.Timestamp > time.Now().Unix() {
+			continue
+		}
 
-			if book.Number >= float64(from) && !chapterExists(book) {
-				err = mangaDexDownloadChapter(series, id, book)
-				if err != nil {
-					fmt.Printf("error downloading chapter: %v", err)
-				}
+		book := &comicbox.Book{}
+		book.Author = stripCtlAndExtFromUnicode(series.Manga.Author)
+		book.Series = stripCtlAndExtFromUnicode(series.Manga.Title)
+		book.Title = stripCtlAndExtFromUnicode(ch.Title)
+		book.Number, _ = strconv.ParseFloat(ch.Chapter, 64)
+		book.Volume, _ = strconv.ParseInt(ch.Volume, 10, 64)
+		book.DateReleased = comicbox.JSONTime(time.Unix(ch.Timestamp, 0))
+
+		if book.Number >= float64(from) && !chapterExists(book) {
+			err = mangaDexDownloadChapter(series, ch.ID, book)
+			if err != nil {
+				fmt.Printf("error downloading chapter: %v", err)
 			}
 		}
 	}
 	return nil
+}
+
+func sortChapters(chapters map[int64]*MangaDexSeriesChapter) []*MangaDexSeriesChapter {
+	newChaps := make([]*MangaDexSeriesChapter, len(chapters))
+	i := 0
+	for id, ch := range chapters {
+		ch.ID = id
+		newChaps[i] = ch
+		i++
+	}
+
+	sort.Slice(newChaps, func(i, j int) bool {
+		numI, err := strconv.ParseFloat(newChaps[i].Chapter, 64)
+		if err != nil {
+			return true
+		}
+		numJ, err := strconv.ParseFloat(newChaps[j].Chapter, 64)
+		if err != nil {
+			return true
+		}
+		return numI < numJ
+	})
+
+	return newChaps
 }
 
 // https://rosettacode.org/wiki/Strip_control_codes_and_extended_characters_from_a_string#Go
@@ -222,6 +256,9 @@ func mangaDexDownloadChapter(series *MangaDexSeries, id int64, book *comicbox.Bo
 
 	book.ImageURLs = chapter.ImageURLs()
 
+	if len(book.ImageURLs) == 0 {
+		return fmt.Errorf("Chapter has no pages, is it released yet?")
+	}
 	// if malID != "0" {
 	// 	malData, err := mal.GetManga(malID)
 	// 	if err == nil {
