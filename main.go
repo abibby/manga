@@ -14,7 +14,7 @@
 
 package main
 
-import "bitbucket.org/zwzn/manga/cmd"
+import "github.com/zwzn/manga/cmd"
 
 func main() {
 	cmd.Execute()

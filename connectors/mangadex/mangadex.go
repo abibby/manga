@@ -11,9 +11,9 @@ import (
 	"strings"
 	"time"
 
-	"bitbucket.org/zwzn/manga/site"
 	"github.com/PuerkitoBio/goquery"
 	"github.com/spf13/viper"
+	"github.com/zwzn/manga/site"
 	"golang.org/x/text/transform"
 	"golang.org/x/text/unicode/norm"
 )

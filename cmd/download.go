@@ -18,10 +18,10 @@ import (
 	"fmt"
 	"strconv"
 
-	"bitbucket.org/zwzn/manga/site"
 	"github.com/spf13/cobra"
+	"github.com/zwzn/manga/site"
 
-	_ "bitbucket.org/zwzn/manga/mangadex"
+	_ "github.com/zwzn/manga/mangadex"
 )
 
 // downloadCmd represents the download command

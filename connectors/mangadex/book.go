@@ -5,7 +5,7 @@ import (
 	"strconv"
 	"time"
 
-	"bitbucket.org/zwzn/manga/site"
+	"github.com/zwzn/manga/site"
 )
 
 type Book struct {
