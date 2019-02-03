@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"net/url"
 	"os"
 	fp "path/filepath"
 	"time"
@@ -118,11 +119,18 @@ func downloadBook(book Book) error {
 	folder := folder(book)
 	os.MkdirAll(folder, 0777)
 	for i, image := range book.Pages() {
-		imageFile := fp.Join(folder, fmt.Sprintf("%03d%s", i, fp.Ext(image)))
+		ext := ""
+		u, err := url.Parse(image)
+		if err != nil {
+			ext = fp.Ext(image)
+		} else {
+			ext = fp.Ext(u.Path)
+		}
+		imageFile := fp.Join(folder, fmt.Sprintf("%03d%s", i, ext))
 		if _, err := os.Stat(imageFile); err == nil {
 			continue
 		}
-		err := saveFile(image, imageFile)
+		err = saveFile(image, imageFile)
 		if err != nil {
 			return err
 		}

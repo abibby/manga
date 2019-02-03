@@ -21,7 +21,8 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/zwzn/manga/site"
 
-	_ "github.com/zwzn/manga/mangadex"
+	_ "github.com/zwzn/manga/connectors/jaiminisbox"
+	_ "github.com/zwzn/manga/connectors/mangadex"
 )
 
 // downloadCmd represents the download command
@@ -47,7 +48,6 @@ var downloadCmd = &cobra.Command{
 func init() {
 	rootCmd.AddCommand(downloadCmd)
 
-	downloadCmd.Flags().IntP("mal-id", "m", 0, "the mal id to be use for sites that dont have one")
 	downloadCmd.Flags().IntP("from", "f", 0, "the chapter to start downloading, inclusive")
 	downloadCmd.Flags().StringP("name", "n", "", "override the default name of the series")
 }
