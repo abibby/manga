@@ -27,10 +27,7 @@ var versionCmd = &cobra.Command{
 	Use:   "version",
 	Short: "Print the version of manga",
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Printf(`Manga:
- Date: %s
-`, Date)
-
+		fmt.Printf("Manga:\n Date: %s\n", Date)
 	},
 }
 

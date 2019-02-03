@@ -29,16 +29,7 @@ var cfgFile string
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
 	Use:   "manga",
-	Short: "A brief description of your application",
-	Long: `A longer description that spans multiple lines and likely contains
-examples and usage of using your application. For example:
-
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
-	// Uncomment the following line if your bare application
-	// has an action associated with it:
-	//	Run: func(cmd *cobra.Command, args []string) { },
+	Short: "manga is a command line tool to downlaod manga from supported websites",
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.
@@ -60,7 +51,6 @@ func init() {
 	rootCmd.PersistentFlags().StringP("dir", "d", filepath.Join(home(), "manga"), "the path to the manga root dir")
 
 	rootCmd.PersistentFlags().StringP("language", "l", "en", "the language to download chapters in")
-	rootCmd.PersistentFlags().StringP("upload-path", "u", "", "the language to download chapters in")
 
 	viper.BindPFlag("language", rootCmd.PersistentFlags().Lookup("language"))
 	viper.BindPFlag("upload-path", rootCmd.PersistentFlags().Lookup("upload-path"))
@@ -76,8 +66,10 @@ func initConfig() {
 	} else {
 
 		// Search config in home directory with name ".manga" (without extension).
-		viper.AddConfigPath(home())
-		viper.SetConfigName(".manga")
+		viper.AddConfigPath(filepath.Join(home(), ".manga"))
+		viper.AddConfigPath("/etc/manga")
+		viper.AddConfigPath(".")
+		viper.SetConfigName("config")
 	}
 
 	// viper.AutomaticEnv() // read in environment variables that match

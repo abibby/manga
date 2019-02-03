@@ -20,13 +20,15 @@ import (
 
 	"bitbucket.org/zwzn/manga/site"
 	"github.com/spf13/cobra"
+
+	_ "bitbucket.org/zwzn/manga/mangadex"
 )
 
 // downloadCmd represents the download command
 var downloadCmd = &cobra.Command{
 	Use:     "download",
 	Aliases: []string{"d"},
-	Short:   "download stuff",
+	Short:   "downloads manga from a url",
 	Long:    `Download stuff`,
 	Args:    cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
