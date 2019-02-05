@@ -165,3 +165,11 @@ func downloadBook(book Book) error {
 
 	return nil
 }
+
+func ConnectorNames() []string {
+	names := []string{}
+	for _, connector := range magnaSites {
+		names = append(names, connector.SiteName())
+	}
+	return names
+}

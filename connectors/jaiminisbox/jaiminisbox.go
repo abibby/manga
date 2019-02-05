@@ -17,6 +17,10 @@ func NewJaiminisBox() *JaiminisBox {
 	return &JaiminisBox{}
 }
 
+func (m *JaiminisBox) SiteName() string {
+	return "JaiminisBox"
+}
+
 func (m *JaiminisBox) Books(rawurl string) ([]site.Book, error) {
 	return seriesBooks(rawurl)
 }

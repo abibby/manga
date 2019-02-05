@@ -29,6 +29,10 @@ func NewMangaDex() *MangaDex {
 	return &MangaDex{}
 }
 
+func (m *MangaDex) SiteName() string {
+	return "MangaDex"
+}
+
 func (m *MangaDex) Books(rawurl string) ([]site.Book, error) {
 	return mangaDexDownload(rawurl, 0)
 }

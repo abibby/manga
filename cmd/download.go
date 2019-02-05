@@ -17,6 +17,7 @@ package cmd
 import (
 	"fmt"
 	"strconv"
+	"strings"
 
 	"github.com/spf13/cobra"
 	"github.com/zwzn/manga/site"
@@ -30,8 +31,9 @@ var downloadCmd = &cobra.Command{
 	Use:     "download",
 	Aliases: []string{"d"},
 	Short:   "downloads manga from a url",
-	Long: `The download command downloads manga from a url.
-you it `,
+	Long: fmt.Sprintf(`The download command downloads manga from a url.
+Manga can download from any site that has a connector setup.
+Currently the installed connectors are %s.`, strings.Join(site.ConnectorNames(), ", ")),
 	Args: cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		url := args[0]

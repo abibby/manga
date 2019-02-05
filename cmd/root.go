@@ -29,7 +29,7 @@ var cfgFile string
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
 	Use:   "manga",
-	Short: "manga is a command line tool to downlaod manga from supported websites",
+	Short: "manga is a command line tool to download manga from supported websites",
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.
