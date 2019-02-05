@@ -22,6 +22,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/zwzn/manga/site"
 
+	// Connectors
 	_ "github.com/zwzn/manga/connectors/jaiminisbox"
 	_ "github.com/zwzn/manga/connectors/mangadex"
 )

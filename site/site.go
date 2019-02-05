@@ -166,6 +166,7 @@ func downloadBook(book Book) error {
 	return nil
 }
 
+// ConnectorNames returns a list of the connector names
 func ConnectorNames() []string {
 	names := []string{}
 	for _, connector := range magnaSites {
