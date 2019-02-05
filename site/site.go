@@ -23,18 +23,18 @@ type MangaSite interface {
 }
 
 type BookInfo struct {
-	Series          string    `json:"series"`
-	Title           string    `json:"title"`
-	Volume          int64     `json:"volume"`
-	Chapter         float64   `json:"chapter"`
-	Summary         string    `json:"summary"`
-	Author          string    `json:"author"`
-	Web             string    `json:"web"`
-	Genre           string    `json:"genre"`
-	Tags            string    `json:"tags"`
-	CommunityRating float64   `json:"community_rating"`
-	DateReleased    time.Time `json:"date_released"`
-	Rating          float64   `json:"rating"`
+	Series          string    `json:"series,omitempty"`
+	Title           string    `json:"title,omitempty"`
+	Volume          int64     `json:"volume,omitempty"`
+	Chapter         float64   `json:"chapter,omitempty"`
+	Summary         string    `json:"summary,omitempty"`
+	Author          string    `json:"author,omitempty"`
+	Web             string    `json:"web,omitempty"`
+	Genre           string    `json:"genre,omitempty"`
+	Tags            string    `json:"tags,omitempty"`
+	CommunityRating float64   `json:"community_rating,omitempty"`
+	DateReleased    time.Time `json:"date_released,omitempty"`
+	Rating          float64   `json:"rating,omitempty"`
 }
 
 type Book interface {
@@ -135,7 +135,7 @@ func downloadBook(book Book) error {
 			return err
 		}
 	}
-	b, err := json.Marshal(book)
+	b, err := json.MarshalIndent(book.Info(), "", "    ")
 	if err != nil {
 		return err
 	}
