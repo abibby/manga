@@ -15,6 +15,8 @@ import (
 
 // MangaSite is an interface that represents a location to download manga
 type MangaSite interface {
+	// SiteName returns the name of the site. it is used for the help commands
+	SiteName() string
 	// Test returns true if the url passed in is can be downloaded from this site
 	Test(url string) bool
 
@@ -22,6 +24,7 @@ type MangaSite interface {
 	Books(url string) ([]Book, error)
 }
 
+// BookInfo is the data that will be put into the book.json file in the cbz
 type BookInfo struct {
 	Series          string    `json:"series,omitempty"`
 	Title           string    `json:"title,omitempty"`
@@ -37,22 +40,31 @@ type BookInfo struct {
 	Rating          float64   `json:"rating,omitempty"`
 }
 
+// Book represents a book on a site.
+// Books will offten be loaded without being downloaded,
+// try to defer downloading until the method that needs it is called
 type Book interface {
+	// Pages returns a list of the image URLs of the pages
 	Pages() []string
+	// ID is a unique representation of the chapter
 	ID() string
+	// Series is the name of the series the chapter belongs to
 	Series() string
+	// Chapter is the number of the chapter
 	Chapter() float64
+	// info contains the information that will be in the book.json file
 	Info() *BookInfo
 }
 
 var magnaSites []MangaSite
+var client = &http.Client{Timeout: 10 * time.Second}
 
+// RegisterMangaSite registers a connector so it will get used when Download is called
 func RegisterMangaSite(site MangaSite) {
 	magnaSites = append(magnaSites, site)
 }
 
-var client = &http.Client{Timeout: 10 * time.Second}
-
+// Download downloads all books from a given URL with chapter >= fromChapter
 func Download(url string, fromChapter int64) error {
 
 	for _, site := range magnaSites {

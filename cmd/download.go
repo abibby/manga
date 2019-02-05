@@ -30,8 +30,9 @@ var downloadCmd = &cobra.Command{
 	Use:     "download",
 	Aliases: []string{"d"},
 	Short:   "downloads manga from a url",
-	Long:    `Download stuff`,
-	Args:    cobra.ExactArgs(1),
+	Long: `The download command downloads manga from a url.
+you it `,
+	Args: cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		url := args[0]
 		fmt.Printf("download %s\n", url)
@@ -49,5 +50,4 @@ func init() {
 	rootCmd.AddCommand(downloadCmd)
 
 	downloadCmd.Flags().IntP("from", "f", 0, "the chapter to start downloading, inclusive")
-	downloadCmd.Flags().StringP("name", "n", "", "override the default name of the series")
 }
