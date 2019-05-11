@@ -176,8 +176,8 @@ func mangaDexDownload(rawurl string, from int64) ([]site.Book, error) {
 	switch parts[1] {
 	case "manga", "title":
 		return mangaDexDownloadSeries(parts[2], from)
-	case "list":
-		return mangaDexDownloadList(parts[2])
+	// case "list":
+	// 	return mangaDexDownloadList(parts[2])
 	case "rss":
 		return mangaDexDownloadRSS(u.String())
 	}
