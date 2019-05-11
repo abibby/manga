@@ -5,11 +5,15 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"os"
 	"path/filepath"
+	"regexp"
 	"sort"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/mmcdole/gofeed"
 
 	"github.com/PuerkitoBio/goquery"
 	"github.com/spf13/viper"
@@ -46,30 +50,30 @@ func (m *MangaDex) Test(rawurl string) bool {
 }
 
 type MangaDexSeriesChapter struct {
-	ID         int64   `json:"id"`
-	Volume     string  `json:"volume"`
-	Chapter    string  `json:"chapter"`
-	Title      string  `json:"title"`
-	LangCode   string  `json:"lang_code"`
-	GroupID    int64   `json:"group_id"`
-	GroupName  string  `json:"group_name"`
-	GroupID2   int64   `json:"group_id_2"`
-	GroupName2 *string `json:"group_name_2"`
-	GroupID3   int64   `json:"group_id_3"`
-	GroupName3 *string `json:"group_name_3"`
-	Timestamp  int64   `json:"timestamp"`
+	ID       int64  `json:"id"`
+	Volume   string `json:"volume"`
+	Chapter  string `json:"chapter"`
+	Title    string `json:"title"`
+	LangCode string `json:"lang_code"`
+	// GroupID    int64   `json:"group_id"`
+	// GroupName  string  `json:"group_name"`
+	// GroupID2   int64   `json:"group_id_2"`
+	// GroupName2 *string `json:"group_name_2"`
+	// GroupID3   int64   `json:"group_id_3"`
+	// GroupName3 *string `json:"group_name_3"`
+	Timestamp int64 `json:"timestamp"`
 }
 type MangaDexManga struct {
-	CoverURL    string  `json:"cover_url"`
-	Description string  `json:"description"`
-	Title       string  `json:"title"`
-	Artist      string  `json:"artist"`
-	Author      string  `json:"author"`
-	Status      int64   `json:"status"`
-	Genres      []int64 `json:"genres"`
-	LastChapter string  `json:"last_chapter"`
-	LangName    string  `json:"lang_name"`
-	LangFlag    string  `json:"lang_flag"`
+	// CoverURL    string  `json:"cover_url"`
+	// Description string  `json:"description"`
+	Title string `json:"title"`
+	// Artist string `json:"artist"`
+	Author string `json:"author"`
+	// Status      int64   `json:"status"`
+	// Genres      []int64 `json:"genres"`
+	// LastChapter string  `json:"last_chapter"`
+	// LangName    string  `json:"lang_name"`
+	// LangFlag    string  `json:"lang_flag"`
 }
 
 type MangaDexSeries struct {
@@ -174,6 +178,8 @@ func mangaDexDownload(rawurl string, from int64) ([]site.Book, error) {
 		return mangaDexDownloadSeries(parts[2], from)
 	case "list":
 		return mangaDexDownloadList(parts[2])
+	case "rss":
+		return mangaDexDownloadRSS(u.String())
 	}
 
 	return nil, fmt.Errorf("invalid url: not a series or list")
@@ -209,24 +215,66 @@ func mangaDexDownloadList(id string) ([]site.Book, error) {
 
 func mangaDexDownloadSeries(id string, from int64) ([]site.Book, error) {
 
-	apiURL := fmt.Sprintf("https://mangadex.org/api/manga/%s", id)
-
-	series := &MangaDexSeries{}
-	err := getJson(apiURL, series)
+	idI, err := strconv.Atoi(id)
+	if err != nil {
+		return nil, err
+	}
+	series, err := Series(idI)
+	if err != nil {
+		return nil, err
+	}
+	return series.download()
+}
+func mangaDexDownloadRSS(rawurl string) ([]site.Book, error) {
+	fp := gofeed.NewParser()
+	feed, err := fp.ParseURL(rawurl)
 	if err != nil {
 		return nil, err
 	}
 
-	vLang := viper.GetString("language")
-	lang, ok := langs[vLang]
-	if !ok {
-		lang = vLang
+	titleToID := map[string]int64{}
+
+	reTitle := regexp.MustCompile(`^(.*) - (?:Volume (\d+), )?Chapter (\d+(?:\.\d+)?)`)
+	reLink := regexp.MustCompile(`^https://mangadex\.org/chapter/(\d+)$`)
+	for _, ch := range feed.Items {
+		matches := reTitle.FindStringSubmatch(ch.Title)
+		if len(matches) < 2 {
+			fmt.Fprintf(os.Stderr, "invalid title %s", ch.Title)
+			continue
+		}
+		_, ok := titleToID[matches[1]]
+		if ok {
+			continue
+		}
+
+		id, err := strconv.Atoi(reLink.FindStringSubmatch(ch.Link)[1])
+		if err != nil {
+			return nil, err
+		}
+		c, err := Chapter(id)
+		if err != nil {
+			return nil, err
+		}
+		titleToID[matches[1]] = c.MangaID
 	}
 
 	books := []site.Book{}
+	for _, id := range titleToID {
+		seriesBooks, err := mangaDexDownloadSeries(fmt.Sprint(id), 0)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "%+v", err)
+		}
+		books = append(books, seriesBooks...)
+	}
+	return books, nil
+}
 
+func (series *MangaDexSeries) download() ([]site.Book, error) {
+
+	books := []site.Book{}
+	l := lang()
 	for _, ch := range sortChapters(series.Chapter) {
-		if ch.LangCode != lang {
+		if ch.LangCode != l {
 			continue
 		}
 
@@ -237,6 +285,15 @@ func mangaDexDownloadSeries(id string, from int64) ([]site.Book, error) {
 		books = append(books, NewBook(ch, series))
 	}
 	return books, nil
+}
+
+func lang() string {
+	vLang := viper.GetString("language")
+	lang, ok := langs[vLang]
+	if !ok {
+		return vLang
+	}
+	return lang
 }
 
 func sortChapters(chapters map[int64]*MangaDexSeriesChapter) []*MangaDexSeriesChapter {

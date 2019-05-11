@@ -29,7 +29,7 @@ import (
 
 // downloadCmd represents the download command
 var downloadCmd = &cobra.Command{
-	Use:     "download",
+	Use:     "download <url>",
 	Aliases: []string{"d"},
 	Short:   "downloads manga from a url",
 	Long: fmt.Sprintf(`The download command downloads manga from a url.
