@@ -25,6 +25,7 @@ import (
 	// Connectors
 	_ "github.com/zwzn/manga/connectors/jaiminisbox"
 	_ "github.com/zwzn/manga/connectors/mangadex"
+	_ "github.com/zwzn/manga/connectors/mangarock"
 )
 
 // downloadCmd represents the download command

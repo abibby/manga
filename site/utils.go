@@ -10,7 +10,7 @@ import (
 )
 
 // https://stackoverflow.com/a/22417396
-func saveFile(url, path string) error {
+func saveFile(site MangaSite, url, path string) error {
 	response, e := client.Get(url)
 	if e != nil {
 		log.Fatal(e)
@@ -18,17 +18,25 @@ func saveFile(url, path string) error {
 
 	defer response.Body.Close()
 
+	body := io.Reader(response.Body)
+	if decoder, ok := site.(ImageDecrypter); ok {
+		ext := ""
+		body, ext = decoder.ImageDecrypt(body)
+		path = path + "." + ext
+	}
+
 	//open a file for writing
 	file, err := os.Create(path)
 	if err != nil {
 		return err
 	}
 	// Use io.Copy to just dump the response body to the file. This supports huge files
-	_, err = io.Copy(file, response.Body)
+	_, err = io.Copy(file, body)
 	if err != nil {
 		return err
 	}
 	file.Close()
+
 	return nil
 }
 

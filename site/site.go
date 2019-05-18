@@ -3,6 +3,7 @@ package site
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"net/http"
 	"net/url"
@@ -22,6 +23,10 @@ type MangaSite interface {
 
 	// Books returns a list of books
 	Books(url string) ([]Book, error)
+}
+
+type ImageDecrypter interface {
+	ImageDecrypt(io.Reader) (io.Reader, string)
 }
 
 // BookInfo is the data that will be put into the book.json file in the cbz
@@ -89,7 +94,7 @@ func download(site MangaSite, url string, fromChapter int64) error {
 			continue
 		}
 		fmt.Printf("Downloading %s\n", name(book))
-		err := downloadBook(book)
+		err := downloadBook(site, book)
 		if err != nil {
 			fmt.Println(err)
 		}
@@ -127,7 +132,7 @@ func chapterExists(book Book) bool {
 	return err == nil
 }
 
-func downloadBook(book Book) error {
+func downloadBook(site MangaSite, book Book) error {
 	folder := folder(book)
 	os.MkdirAll(folder, 0777)
 	for i, image := range book.Pages() {
@@ -142,7 +147,7 @@ func downloadBook(book Book) error {
 		if _, err := os.Stat(imageFile); err == nil {
 			continue
 		}
-		err = saveFile(image, imageFile)
+		err = saveFile(site, image, imageFile)
 		if err != nil {
 			return err
 		}

@@ -1,0 +1,61 @@
+{
+    "code": 0,
+    "data": {
+        "mrs-serie-100350535": {
+            "basic_info": {
+                "name": "Solo Leveling",
+                "thumbnail": "https://f01.mrcdn.info/file/mrportal/i/b/5/4/Rh.OtOyVcy.jpg",
+                "thumbnail_extra": {
+                    "generated": false,
+                    "averageColor": "#8C898F",
+                    "textBackgroundColor": "#4D4A4F",
+                    "textColor": "#FFFFFF"
+                },
+                "cover": "https://f01.mrcdn.info/file/mrportal/j/1/n/7/bN.aNPcCYNB.jpg",
+                "alias": [
+                    "나 혼자만 레벨업"
+                ],
+                "cover_extra": {
+                    "generated": false,
+                    "averageColor": "#71686F",
+                    "textBackgroundColor": "#50494E",
+                    "textColor": "#FFFFFF"
+                },
+                "rank": 12,
+                "removed": false,
+                "author": "Sung-Lak Jang",
+                "completed": false,
+                "direction": 0,
+                "categories": [
+                    1,
+                    2,
+                    5,
+                    8,
+                    29
+                ],
+                "total_chapters": 36,
+                "description": "10 years ago, after “the Gate” that connected the real world with the monster world opened, some of the ordinary, everyday people received the power to hunt monsters within the Gate. They are known as \"Hunters\". However, not all Hunters are powerful. My name is Sung Jin-Woo, an E-rank Hunter. I'm someone who has to risk his life in the lowliest of dungeons, the \"World's Weakest\". Having no skills whatsoever to display, I barely earned the required money by fighting in low-leveled dungeons… at least until I found a hidden dungeon with the hardest difficulty within the D-rank dungeons! In the end, as I was accepting death, I suddenly received a strange power, a quest log that only I could see, a secret to leveling up that only I know about! If I trained in accordance with my quests and hunted monsters, my level would rise. Changing from the weakest Hunter to the strongest S-rank Hunter!",
+                "release_frequency": {
+                    "type": "auto",
+                    "unit": "day",
+                    "amount": 2
+                },
+                "mrs_series": null
+            },
+            "summary": {
+                "plot_points": [],
+                "key_genres": [
+                    "mrs-genre-304089",
+                    "mrs-genre-304087",
+                    "mrs-genre-304068"
+                ]
+            },
+            "default": {
+                "oid": "mrs-serie-100350535",
+                "mid": 629821,
+                "msid": 71,
+                "last_updated": 1557276366
+            }
+        }
+    }
+}
