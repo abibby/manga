@@ -20,12 +20,16 @@ func seriesBooks(rawurl string) ([]site.Book, error) {
 	doc.Find(".element").Each(func(i int, row *goquery.Selection) {
 		eTitle := row.Find(".title a")
 		parts := strings.Split(eTitle.Text(), ":")
+		title := ""
+		if len(parts) > 1 {
+			title = parts[1]
+		}
 		chapter, _ := strconv.ParseFloat(strings.Split(parts[0], " ")[1], 64)
 		link, _ := eTitle.Attr("href")
 		books = append(books, &Book{
 			url: link,
 			info: site.BookInfo{
-				Title:   parts[1],
+				Title:   title,
 				Series:  series,
 				Chapter: chapter,
 			},
