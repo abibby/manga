@@ -16,6 +16,7 @@ package cmd
 
 import (
 	"fmt"
+	"os"
 	"strconv"
 	"strings"
 
@@ -36,17 +37,22 @@ var downloadCmd = &cobra.Command{
 	Long: fmt.Sprintf(`The download command downloads manga from a url.
 Manga can download from any site that has a connector setup.
 Currently the installed connectors are %s.`, strings.Join(site.ConnectorNames(), ", ")),
-	Args: cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
-		url := args[0]
-		fmt.Printf("download %s\n", url)
+		for _, url := range args {
 
-		from, err := strconv.ParseInt(cmd.Flag("from").Value.String(), 10, 64)
-		if err != nil {
-			return err
+			fmt.Printf("download %s\n", url)
+
+			from, err := strconv.ParseInt(cmd.Flag("from").Value.String(), 10, 64)
+			if err != nil {
+				return err
+			}
+
+			err = site.Download(url, from)
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "There was an error downloading %s: %v", url, err)
+			}
 		}
-
-		return site.Download(url, from)
+		return nil
 	},
 }
 

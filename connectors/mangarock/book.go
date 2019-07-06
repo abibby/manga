@@ -45,10 +45,10 @@ func (b *Book) Chapter() float64 {
 }
 func (b *Book) Info() *site.BookInfo {
 	return &site.BookInfo{
-		Series:  b.series.Name,
+		Series:  b.Series(),
 		Title:   b.seriesChapter.Title(),
 		Volume:  b.seriesChapter.Volume(),
-		Chapter: b.seriesChapter.Chapter(),
+		Chapter: b.Chapter(),
 		Summary: b.series.Description,
 		Author:  b.series.Author,
 	}

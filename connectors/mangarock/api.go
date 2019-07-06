@@ -57,10 +57,17 @@ type MangaRockChapter struct {
 }
 
 var chapterRE = regexp.MustCompile(`(?:Vol\.([^ ]+) )?Chapter (\d+(?:\.\d+)?)(?:: (.*))?`)
+var chapterREFallback = regexp.MustCompile(`^[^\d]*(\d+)`)
 
 func (m *MangaRockChapter) matches(i int) string {
 	if m.reMatches == nil {
 		m.reMatches = chapterRE.FindStringSubmatch(m.Name)
+	}
+	if len(m.reMatches) == 0 {
+		matches := chapterREFallback.FindStringSubmatch(m.Name)
+		if len(matches) != 0 {
+			m.reMatches = []string{"", "", matches[1], ""}
+		}
 	}
 	if len(m.reMatches) <= i {
 		return ""

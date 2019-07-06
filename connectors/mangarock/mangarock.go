@@ -6,7 +6,6 @@ import (
 	"io"
 	"io/ioutil"
 	"net/url"
-	"os"
 	"strings"
 
 	"github.com/zwzn/manga/site"
@@ -55,7 +54,6 @@ func (m *MangaRock) Books(rawurl string) ([]site.Book, error) {
 	if parts[1] == "manga" {
 		return downloadSeries(parts[2])
 	}
-	os.Exit(1)
 	return nil, nil
 }
 
