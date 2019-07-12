@@ -1,12 +1,15 @@
 package jaiminisbox
 
 import (
+	"regexp"
 	"strconv"
 	"strings"
 
 	"github.com/PuerkitoBio/goquery"
 	"github.com/zwzn/manga/site"
 )
+
+var extractNumberRE = regexp.MustCompile("\\d+(\\.\\d+)")
 
 func seriesBooks(rawurl string) ([]site.Book, error) {
 	doc, err := goquery.NewDocument(rawurl)
@@ -20,6 +23,11 @@ func seriesBooks(rawurl string) ([]site.Book, error) {
 	doc.Find(".element").Each(func(i int, row *goquery.Selection) {
 		eTitle := row.Find(".title a")
 		parts := strings.Split(eTitle.Text(), ":")
+		if len(parts) == 0 {
+			text := eTitle.Text()
+
+			parts = []string{extractNumberRE.FindString(text), text}
+		}
 		title := ""
 		if len(parts) > 1 {
 			title = parts[1]
