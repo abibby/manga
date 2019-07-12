@@ -26,7 +26,7 @@ func seriesBooks(rawurl string) ([]site.Book, error) {
 		if len(parts) == 0 {
 			text := eTitle.Text()
 
-			parts = []string{extractNumberRE.FindString(text), text}
+			parts = []string{"Chapter " + extractNumberRE.FindString(text), text}
 		}
 		title := ""
 		if len(parts) > 1 {
