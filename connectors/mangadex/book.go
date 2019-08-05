@@ -9,53 +9,75 @@ import (
 )
 
 type Book struct {
-	seriesChapter *MangaDexSeriesChapter
-	mdChapter     *MangaDexChapter
-	series        *MangaDexSeries
+	id      int
+	series  string
+	chapter float64
+	volume  int
+	// seriesChapter *MangaDexSeriesChapter
+	mdChapter *MangaDexChapter
+	mdSeries  *MangaDexSeries
 }
 
-func NewBook(ch *MangaDexSeriesChapter, series *MangaDexSeries) *Book {
+var _ site.Book = &Book{}
+
+func NewBook(id int, series string, chapter float64, volume int) *Book {
 	return &Book{
-		seriesChapter: ch,
-		series:        series,
+		id:      id,
+		series:  series,
+		chapter: chapter,
+		volume:  volume,
 	}
 }
 
 func (b *Book) Pages() []string {
-	chapter, err := b.chapter()
-	if err != nil {
-		panic(err)
-	}
+	chapter := b.mangaDexChapter()
 	return chapter.ImageURLs()
 }
 func (b *Book) ID() string {
-	return fmt.Sprint(b.seriesChapter.ID)
+	return fmt.Sprint(b.id)
 }
 func (b *Book) Series() string {
-	return b.series.Manga.Title
+	return b.series
 }
 func (b *Book) Chapter() float64 {
-	ch, _ := strconv.ParseFloat(b.seriesChapter.Chapter, 64)
-	return ch
+	return b.chapter
+}
+func (b *Book) Volume() int {
+	return b.volume
 }
 func (b *Book) Info() *site.BookInfo {
+	chapter := b.mangaDexChapter()
+	series := b.mangaDexSeries()
+
 	info := &site.BookInfo{}
-	info.Author = stripCtlAndExtFromUnicode(b.series.Manga.Author)
-	info.Series = stripCtlAndExtFromUnicode(b.series.Manga.Title)
-	info.Title = stripCtlAndExtFromUnicode(b.seriesChapter.Title)
+	info.Author = stripCtlAndExtFromUnicode(series.Manga.Author)
+	info.Series = stripCtlAndExtFromUnicode(b.series)
+	info.Title = stripCtlAndExtFromUnicode(chapter.Title)
 	info.Chapter = b.Chapter()
-	info.Volume, _ = strconv.ParseInt(b.seriesChapter.Volume, 10, 64)
-	info.DateReleased = time.Unix(b.seriesChapter.Timestamp, 0)
+	info.Volume, _ = strconv.Atoi(chapter.Volume)
+	info.DateReleased = time.Unix(chapter.Timestamp, 0)
 	return info
 }
 
-func (b *Book) chapter() (*MangaDexChapter, error) {
+func (b *Book) mangaDexChapter() *MangaDexChapter {
 	if b.mdChapter == nil {
-		b.mdChapter = &MangaDexChapter{}
-		err := getJson(fmt.Sprintf("https://mangadex.org/api/chapter/%s", b.ID()), b.mdChapter)
+		var err error
+		b.mdChapter, err = Chapter(b.id)
 		if err != nil {
-			return nil, err
+			panic(err)
 		}
 	}
-	return b.mdChapter, nil
+	return b.mdChapter
+}
+
+func (b *Book) mangaDexSeries() *MangaDexSeries {
+	if b.mdSeries == nil {
+		var err error
+		chapter := b.mangaDexChapter()
+		b.mdSeries, err = chapter.Series()
+		if err != nil {
+			panic(err)
+		}
+	}
+	return b.mdSeries
 }

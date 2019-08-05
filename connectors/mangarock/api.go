@@ -77,12 +77,12 @@ func (m *MangaRockChapter) matches(i int) string {
 func (m *MangaRockChapter) Title() string {
 	return m.matches(3)
 }
-func (m *MangaRockChapter) Volume() int64 {
+func (m *MangaRockChapter) Volume() int {
 	vol, err := strconv.Atoi(m.matches(1))
 	if err != nil {
 		return 0
 	}
-	return int64(vol)
+	return vol
 }
 func (m *MangaRockChapter) Chapter() float64 {
 	ch, err := strconv.ParseFloat(m.matches(2), 64)

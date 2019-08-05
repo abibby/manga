@@ -16,6 +16,8 @@ type Book struct {
 	info  site.BookInfo
 }
 
+var _ site.Book = &Book{}
+
 type Page struct {
 	ID        int    `json:"id"`
 	ChapterID string `json:"chapter_id"`
@@ -74,6 +76,9 @@ func (b *Book) Series() string {
 }
 func (b *Book) Chapter() float64 {
 	return b.info.Chapter
+}
+func (b *Book) Volume() int {
+	return b.info.Volume
 }
 func (b *Book) Info() *site.BookInfo {
 	return &b.info

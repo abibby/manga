@@ -43,6 +43,9 @@ func (b *Book) Series() string {
 func (b *Book) Chapter() float64 {
 	return b.seriesChapter.Chapter()
 }
+func (b *Book) Volume() int {
+	return b.seriesChapter.Volume()
+}
 func (b *Book) Info() *site.BookInfo {
 	return &site.BookInfo{
 		Series:  b.Series(),

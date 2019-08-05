@@ -33,7 +33,7 @@ type ImageDecrypter interface {
 type BookInfo struct {
 	Series          string    `json:"series,omitempty"`
 	Title           string    `json:"title,omitempty"`
-	Volume          int64     `json:"volume,omitempty"`
+	Volume          int       `json:"volume,omitempty"`
 	Chapter         float64   `json:"chapter,omitempty"`
 	Summary         string    `json:"summary,omitempty"`
 	Author          string    `json:"author,omitempty"`
@@ -57,6 +57,8 @@ type Book interface {
 	Series() string
 	// Chapter is the number of the chapter
 	Chapter() float64
+	// Volume is the volume number of the chapter
+	Volume() int
 	// info contains the information that will be in the book.json file
 	Info() *BookInfo
 }
@@ -109,16 +111,15 @@ func seriesFolder(book Book) string {
 }
 
 func name(book Book) string {
-	info := book.Info()
-	name := info.Series
-	if info.Volume != 0 {
-		name += fmt.Sprintf(" V%d", info.Volume)
+	name := book.Series()
+	if book.Volume() != 0 {
+		name += fmt.Sprintf(" V%d", book.Volume())
 	}
-	if info.Chapter != 0 {
-		name += fmt.Sprintf(" #%.6g", info.Chapter)
+	if book.Chapter() != 0 {
+		name += fmt.Sprintf(" #%.6g", book.Chapter())
 	}
-	if info.Volume == 0 && info.Chapter == 0 {
-		name += " " + info.Title
+	if book.Volume() == 0 && book.Chapter() == 0 {
+		name += " " + book.ID()
 	}
 	return name
 }
