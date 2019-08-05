@@ -39,10 +39,9 @@ func (b *Book) Chapter() float64 {
 	return ch
 }
 func (b *Book) Info() *site.BookInfo {
-	series := b.series
 	info := &site.BookInfo{}
-	info.Author = stripCtlAndExtFromUnicode(series.Manga.Author)
-	info.Series = stripCtlAndExtFromUnicode(series.Manga.Title)
+	info.Author = stripCtlAndExtFromUnicode(b.series.Manga.Author)
+	info.Series = stripCtlAndExtFromUnicode(b.series.Manga.Title)
 	info.Title = stripCtlAndExtFromUnicode(b.seriesChapter.Title)
 	info.Chapter = b.Chapter()
 	info.Volume, _ = strconv.ParseInt(b.seriesChapter.Volume, 10, 64)

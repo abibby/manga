@@ -176,8 +176,6 @@ func mangaDexDownload(rawurl string, from int64) ([]site.Book, error) {
 	switch parts[1] {
 	case "manga", "title":
 		return mangaDexDownloadSeries(parts[2], from)
-	// case "list":
-	// 	return mangaDexDownloadList(parts[2])
 	case "rss":
 		return mangaDexDownloadRSS(u.String())
 	}
@@ -333,31 +331,6 @@ func stripCtlAndExtFromUnicode(str string) string {
 	str, _, _ = transform.String(t, str)
 	return str
 }
-
-// func mangaDexDownloadChapter(series *MangaDexSeries, id int64, book *comicbox.Book) error {
-// 	chapter := &MangaDexChapter{}
-// 	getJson(fmt.Sprintf("https://mangadex.org/api/chapter/%d", id), chapter)
-
-// 	book.ImageURLs = chapter.ImageURLs()
-
-// 	if len(book.ImageURLs) == 0 {
-// 		return fmt.Errorf("Chapter has no pages, is it released yet?")
-// 	}
-// 	// if malID != "0" {
-// 	// 	malData, err := mal.GetManga(malID)
-// 	// 	if err == nil {
-// 	// 		book.Summary = malData.Synopsis
-// 	// 		book.CommunityRating = malData.Score
-// 	// 		book.Genre = strings.Join(malData.Genres, ",")
-// 	// 		book.Web = fmt.Sprintf("https://myanimelist.net/manga/%s", malID)
-// 	// 	}
-// 	// }
-// 	err := saveChapter(book)
-// 	if err != nil {
-// 		return err
-// 	}
-// 	return nil
-// }
 
 func getJson(url string, target interface{}) error {
 	r, err := http.Get(url)

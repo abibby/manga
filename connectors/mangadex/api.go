@@ -4,26 +4,39 @@ import (
 	"fmt"
 )
 
+var chapters = map[int]*MangaDexChapter{}
+var series = map[int]*MangaDexSeries{}
+
 func Chapter(id int) (*MangaDexChapter, error) {
+	chapter, ok := chapters[id]
+	if ok {
+		return chapter, nil
+	}
 	apiURL := fmt.Sprintf("https://mangadex.org/api?type=chapter&id=%d", id)
 
-	chapter := &MangaDexChapter{}
 	err := getJson(apiURL, chapter)
 	if err != nil {
 		return nil, err
 	}
 
+	chapters[id] = chapter
+
 	return chapter, nil
 }
 
 func Series(id int) (*MangaDexSeries, error) {
+	serie, ok := series[id]
+	if ok {
+		return serie, nil
+	}
 	apiURL := fmt.Sprintf("https://mangadex.org/api?type=manga&id=%d", id)
 
-	series := &MangaDexSeries{}
-	err := getJson(apiURL, series)
+	err := getJson(apiURL, serie)
 	if err != nil {
 		return nil, err
 	}
 
-	return series, nil
+	series[id] = serie
+
+	return serie, nil
 }
