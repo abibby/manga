@@ -10,8 +10,8 @@ import (
 )
 
 // https://stackoverflow.com/a/22417396
-func saveFile(site MangaSite, url, path string) error {
-	response, e := client.Get(url)
+func saveFile(site MangaSite, page Page, path string) error {
+	response, e := client.Get(page.URL())
 	if e != nil {
 		log.Fatal(e)
 	}
@@ -19,7 +19,7 @@ func saveFile(site MangaSite, url, path string) error {
 	defer response.Body.Close()
 
 	body := io.Reader(response.Body)
-	if decoder, ok := site.(ImageDecrypter); ok {
+	if decoder, ok := page.(ImageDecrypter); ok {
 		ext := ""
 		body, ext = decoder.ImageDecrypt(body)
 		path = path + "." + ext

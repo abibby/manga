@@ -1,17 +1,17 @@
 package mangaplus
 
 import (
+	"bytes"
 	"encoding/hex"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"net/http"
 	"net/url"
-	"os"
 	"strconv"
 	"strings"
 	"time"
 
-	"github.com/davecgh/go-spew/spew"
 	"github.com/zwzn/manga/connectors/mangaplus/mpproto"
 	"github.com/zwzn/manga/site"
 )
@@ -49,18 +49,27 @@ func books(uri string) ([]site.Book, error) {
 	return bs, nil
 }
 
-func (b *Book) Pages() []string {
+func (b *Book) Pages() []site.Page {
 	result, err := mpproto.Get("https://jumpg-webapi.tokyo-cdn.com/api/manga_viewer?chapter_id=%s&split=yes&img_quality=high", b.ID())
 	if err != nil {
 		panic(err)
 	}
 
-	pages := []string{}
+	pages := []site.Page{}
 	for _, page := range result.GetMangaViewer().GetPages() {
-		pages = append(pages, page.GetMangaPage().GetImageUrl())
+		pageURL := page.GetMangaPage().GetImageUrl()
+		if pageURL != "" {
+			encKey, err := hex.DecodeString(page.GetMangaPage().GetEncryptionKey())
+			if err != nil {
+				panic(err)
+			}
+			pages = append(pages, &Page{
+				url:           pageURL,
+				encryptionKey: encKey,
+			})
+		}
 	}
-	spew.Dump(pages)
-	os.Exit(1)
+
 	return pages
 }
 func (b *Book) ID() string {
@@ -126,12 +135,15 @@ func getPages(id string) []Page {
 	return pages
 }
 
-func (p *Page) Image() []byte {
-	r, err := http.Get(p.url)
-	if err != nil {
-		panic(err)
-	}
-	o, err := ioutil.ReadAll(r.Body)
+var _ site.Page = &Page{}
+var _ site.ImageDecrypter = &Page{}
+
+func (p *Page) URL() string {
+	return p.url
+}
+func (p *Page) ImageDecrypt(encrypted io.Reader) (io.Reader, string) {
+
+	o, err := ioutil.ReadAll(encrypted)
 	if err != nil {
 		panic(err)
 	}
@@ -141,5 +153,6 @@ func (p *Page) Image() []byte {
 	for s := 0; s < len(o); s++ {
 		o[s] ^= p.encryptionKey[s%a]
 	}
-	return o
+
+	return bytes.NewReader(o), "png"
 }

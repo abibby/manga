@@ -29,7 +29,7 @@ func NewBook(id int, series string, chapter float64, volume int) *Book {
 	}
 }
 
-func (b *Book) Pages() []string {
+func (b *Book) Pages() []site.Page {
 	chapter := b.mangaDexChapter()
 	return chapter.ImageURLs()
 }

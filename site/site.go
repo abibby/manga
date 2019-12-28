@@ -45,12 +45,16 @@ type BookInfo struct {
 	Rating          float64   `json:"rating,omitempty"`
 }
 
+type Page interface {
+	URL() string
+}
+
 // Book represents a book on a site.
 // Books will offten be loaded without being downloaded,
 // try to defer downloading until the method that needs it is called
 type Book interface {
 	// Pages returns a list of the image URLs of the pages
-	Pages() []string
+	Pages() []Page
 	// ID is a unique representation of the chapter
 	ID() string
 	// Series is the name of the series the chapter belongs to
@@ -61,6 +65,12 @@ type Book interface {
 	Volume() int
 	// info contains the information that will be in the book.json file
 	Info() *BookInfo
+}
+
+type DefaultPage string
+
+func (p DefaultPage) URL() string {
+	return string(p)
 }
 
 var magnaSites []MangaSite
@@ -138,9 +148,9 @@ func downloadBook(site MangaSite, book Book) error {
 	os.MkdirAll(folder, 0777)
 	for i, image := range book.Pages() {
 		ext := ""
-		u, err := url.Parse(image)
+		u, err := url.Parse(image.URL())
 		if err != nil {
-			ext = fp.Ext(image)
+			ext = fp.Ext(image.URL())
 		} else {
 			ext = fp.Ext(u.Path)
 		}

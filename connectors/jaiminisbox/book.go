@@ -36,7 +36,7 @@ type Page struct {
 	ThumbURL  string `json:"thumb_url"`
 }
 
-func (b *Book) Pages() []string {
+func (b *Book) Pages() []site.Page {
 	if b.pages == nil {
 		resp, err := http.Get(b.url)
 		if err != nil {
@@ -62,9 +62,9 @@ func (b *Book) Pages() []string {
 		}
 
 	}
-	images := []string{}
+	images := []site.Page{}
 	for _, page := range b.pages {
-		images = append(images, page.URL)
+		images = append(images, site.DefaultPage(page.URL))
 	}
 	return images
 }

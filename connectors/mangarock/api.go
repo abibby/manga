@@ -156,9 +156,13 @@ func (m *MangaDetailData) Books() []site.Book {
 }
 
 type Page struct {
-	URL  string `json:"url"`
-	Role string `json:"role"`
+	ImageURL string `json:"url"`
+	Role     string `json:"role"`
 }
+
+var _ site.ImageDecrypter = &Page{}
+var _ site.Page = &Page{}
+
 type PagesData struct {
 	Data []*Page `json:"data"`
 }

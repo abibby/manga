@@ -2,6 +2,7 @@ package mangadex
 
 import (
 	"fmt"
+	"github.com/zwzn/manga/site"
 	"path/filepath"
 	"strings"
 )
@@ -68,14 +69,14 @@ type MangaDexChapter struct {
 	Status    string   `json:"status"`
 }
 
-func (s *MangaDexChapter) ImageURLs() []string {
-	imageURLs := []string{}
+func (s *MangaDexChapter) ImageURLs() []site.Page {
+	imageURLs := []site.Page{}
 	for _, page := range s.Pages {
 		imageURL := s.Server + filepath.Join(s.Hash, page)
 		if strings.HasPrefix(imageURL, "/") {
 			imageURL = "https://mangadex.org" + imageURL
 		}
-		imageURLs = append(imageURLs, imageURL)
+		imageURLs = append(imageURLs, site.DefaultPage(imageURL))
 	}
 	return imageURLs
 }

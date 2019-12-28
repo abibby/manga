@@ -1,10 +1,7 @@
 package mangarock
 
 import (
-	"bytes"
-	"encoding/binary"
 	"io"
-	"io/ioutil"
 	"net/url"
 	"strings"
 
@@ -30,7 +27,6 @@ func NewMangaRock() *MangaRock {
 	return &MangaRock{}
 }
 
-var _ site.ImageDecrypter = &MangaRock{}
 var _ site.MangaSite = &MangaRock{}
 
 func (m *MangaRock) SiteName() string {
@@ -72,24 +68,4 @@ var _ io.Reader = &errorReader{}
 
 func (er *errorReader) Read([]byte) (int, error) {
 	return 0, er.err
-}
-
-func (m *MangaRock) ImageDecrypt(encrypted io.Reader) (io.Reader, string) {
-	const key = 0x65
-
-	b, err := ioutil.ReadAll(encrypted)
-	if err != nil {
-		return &errorReader{err}, "webp"
-	}
-	decrypted := make([]byte, 0, len(b)+15)
-	n := make([]byte, 4)
-	binary.LittleEndian.PutUint32(n, uint32(len(b)+7))
-	header := []byte{82, 73, 70, 70, n[0], n[1], n[2], n[3], 87, 69, 66, 80, 86, 80, 56}
-	decrypted = append(decrypted, header...)
-
-	for _, c := range b {
-		decrypted = append(decrypted, key^c)
-	}
-
-	return bytes.NewReader(decrypted), "webp"
 }

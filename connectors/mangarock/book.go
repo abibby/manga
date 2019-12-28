@@ -1,7 +1,11 @@
 package mangarock
 
 import (
+	"bytes"
+	"encoding/binary"
 	"fmt"
+	"io"
+	"io/ioutil"
 
 	"github.com/zwzn/manga/site"
 )
@@ -20,17 +24,17 @@ func NewBook(ch *MangaRockChapter, series *MangaRockSeries) *Book {
 	}
 }
 
-func (b *Book) Pages() []string {
+func (b *Book) Pages() []site.Page {
 	pages, err := Pages(b.seriesChapter.ID)
 	if err != nil {
 		panic(err)
 	}
-	urls := make([]string, 0, len(pages))
+	urls := make([]site.Page, 0, len(pages))
 	for _, page := range pages {
 		if page.Role == "credit" {
 			continue
 		}
-		urls = append(urls, page.URL)
+		urls = append(urls, page)
 	}
 	return urls
 }
@@ -55,4 +59,27 @@ func (b *Book) Info() *site.BookInfo {
 		Summary: b.series.Description,
 		Author:  b.series.Author,
 	}
+}
+
+func (p *Page) URL() string {
+	return p.ImageURL
+}
+func (m *Page) ImageDecrypt(encrypted io.Reader) (io.Reader, string) {
+	const key = 0x65
+
+	b, err := ioutil.ReadAll(encrypted)
+	if err != nil {
+		return &errorReader{err}, "webp"
+	}
+	decrypted := make([]byte, 0, len(b)+15)
+	n := make([]byte, 4)
+	binary.LittleEndian.PutUint32(n, uint32(len(b)+7))
+	header := []byte{82, 73, 70, 70, n[0], n[1], n[2], n[3], 87, 69, 66, 80, 86, 80, 56}
+	decrypted = append(decrypted, header...)
+
+	for _, c := range b {
+		decrypted = append(decrypted, key^c)
+	}
+
+	return bytes.NewReader(decrypted), "webp"
 }
