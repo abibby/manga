@@ -96,7 +96,7 @@ func mangaDexDownload(rawurl string, from int64) ([]site.Book, error) {
 	if len(parts) < 3 {
 		return nil, fmt.Errorf("invalid url: not enough parts")
 	}
-
+	u.Host = hostName
 	switch parts[1] {
 	// case "manga", "title":
 	// 	return mangaDexDownloadSeries(parts[2], from)
