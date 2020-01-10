@@ -81,7 +81,7 @@ func (b *Book) Series() string {
 func (b *Book) Chapter() float64 {
 	ch, err := strconv.ParseFloat(b.chapter.GetName()[1:], 64)
 	if err != nil {
-		panic(err)
+		return 0
 	}
 	return ch
 }
