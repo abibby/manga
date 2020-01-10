@@ -2,9 +2,11 @@ package mangadex
 
 import (
 	"fmt"
-	"github.com/zwzn/manga/site"
+	"net/http"
 	"path/filepath"
 	"strings"
+
+	"github.com/zwzn/manga/site"
 )
 
 type MangaDexSeriesChapter struct {
@@ -40,11 +42,20 @@ type MangaDexSeries struct {
 	Status  string                           `json:"status"`
 }
 
+var hostName = "mangadex.org"
+
+func init() {
+	_, err := http.Get("https://mangadex.org")
+	if err != nil {
+		hostName = "mangadex.cc"
+	}
+}
+
 func (s *MangaDexSeries) ChapterURLs() []string {
 
 	chapterURLs := []string{}
 	for id, _ := range s.Chapter {
-		chapterURLs = append(chapterURLs, fmt.Sprintf("https://mangadex.org/api/chapter/%d", id))
+		chapterURLs = append(chapterURLs, fmt.Sprintf("https://%s/api/chapter/%d", hostName, id))
 	}
 	return chapterURLs
 }
@@ -74,7 +85,7 @@ func (s *MangaDexChapter) ImageURLs() []site.Page {
 	for _, page := range s.Pages {
 		imageURL := s.Server + filepath.Join(s.Hash, page)
 		if strings.HasPrefix(imageURL, "/") {
-			imageURL = "https://mangadex.org" + imageURL
+			imageURL = "https://" + hostName + imageURL
 		}
 		imageURLs = append(imageURLs, site.DefaultPage(imageURL))
 	}
@@ -93,7 +104,7 @@ func Chapter(id int) (*MangaDexChapter, error) {
 	if ok {
 		return chapter, nil
 	}
-	apiURL := fmt.Sprintf("https://mangadex.org/api?type=chapter&id=%d", id)
+	apiURL := fmt.Sprintf("https://%s/api?type=chapter&id=%d", hostName, id)
 
 	chapter = &MangaDexChapter{}
 	err := getJson(apiURL, chapter)
@@ -111,7 +122,7 @@ func Series(id int) (*MangaDexSeries, error) {
 	if ok {
 		return serie, nil
 	}
-	apiURL := fmt.Sprintf("https://mangadex.org/api?type=manga&id=%d", id)
+	apiURL := fmt.Sprintf("https://%s/api?type=manga&id=%d", hostName, id)
 
 	serie = &MangaDexSeries{}
 	err := getJson(apiURL, serie)

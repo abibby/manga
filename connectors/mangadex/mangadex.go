@@ -44,7 +44,7 @@ func (m *MangaDex) Test(rawurl string) bool {
 	if err != nil {
 		return false
 	}
-	return u.Hostname() == "mangadex.org"
+	return u.Hostname() == "mangadex.org" || u.Hostname() == "mangadex.cc"
 }
 
 var langs = map[string]string{
@@ -130,7 +130,7 @@ func mangaDexDownloadRSS(rawurl string) ([]site.Book, error) {
 	}
 
 	reTitle := regexp.MustCompile(`^(.*) - (?:Volume (\d+), )?Chapter (\d+(?:\.\d+)?)`)
-	reLink := regexp.MustCompile(`^https://mangadex\.org/chapter/(\d+)$`)
+	reLink := regexp.MustCompile(`^https://mangadex\.(?:org|cc)/chapter/(\d+)$`)
 
 	books := []site.Book{}
 
