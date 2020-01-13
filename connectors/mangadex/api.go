@@ -2,7 +2,6 @@ package mangadex
 
 import (
 	"fmt"
-	"net/http"
 	"path/filepath"
 	"strings"
 
@@ -40,15 +39,6 @@ type MangaDexSeries struct {
 	Manga   *MangaDexManga                   `json:"manga"`
 	Chapter map[int64]*MangaDexSeriesChapter `json:"chapter"`
 	Status  string                           `json:"status"`
-}
-
-var hostName = "mangadex.org"
-
-func init() {
-	_, err := http.Get("https://mangadex.org")
-	if err != nil {
-		hostName = "mangadex.cc"
-	}
 }
 
 func (s *MangaDexSeries) ChapterURLs() []string {

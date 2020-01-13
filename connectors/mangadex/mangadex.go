@@ -4,13 +4,16 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"net/http/cookiejar"
 	"net/url"
 	"os"
 	"regexp"
 	"sort"
 	"strconv"
 	"strings"
+	"time"
 
+	"github.com/davecgh/go-spew/spew"
 	"github.com/mmcdole/gofeed"
 	"github.com/pkg/errors"
 
@@ -124,7 +127,13 @@ func mangaDexDownload(rawurl string, from int64) ([]site.Book, error) {
 
 func mangaDexDownloadRSS(rawurl string) ([]site.Book, error) {
 	fp := gofeed.NewParser()
-	feed, err := fp.ParseURL(rawurl)
+	r, err := get(rawurl)
+	if err != nil {
+		return nil, err
+	}
+	defer r.Body.Close()
+
+	feed, err := fp.Parse(r.Body)
 	if err != nil {
 		return nil, err
 	}
@@ -207,11 +216,67 @@ func stripCtlAndExtFromUnicode(str string) string {
 	return str
 }
 
-func getJson(url string, target interface{}) error {
-	r, err := http.Get(url)
+var lastRequest time.Time
+
+var hostName string = "mangadex.cc"
+
+// func init() {
+// 	_, err := get("https://mangadex.org")
+// 	if err != nil {
+// 		hostName = "mangadex.cc"
+// 	} else {
+// 		hostName = "mangadex.org"
+// 	}
+// }
+
+var cookieJar, _ = cookiejar.New(nil)
+
+func get(rawurl string) (*http.Response, error) {
+	timeToWait := (time.Second * 2) - time.Since(lastRequest)
+	if timeToWait > 0 {
+		time.Sleep(timeToWait)
+	}
+
+	lastRequest = time.Now()
+	u, err := url.Parse(rawurl)
+	if err != nil {
+		return nil, err
+	}
+	u.Host = hostName
+
+	client := &http.Client{
+		Jar: cookieJar,
+	}
+	spew.Dump(u.String())
+	req, err := http.NewRequest("GET", u.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("User-Agent", "Mozilla/5.0 (X11; Linux x86_64; rv:71.0) Gecko/20100101 Firefox/71.0")
+	req.Header.Set("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8")
+	req.Header.Set("Accept-Language", "en-US,en;q=0.")
+	req.Header.Set("DNT", "1")
+	req.Header.Set("Connection", "keep-alive")
+	req.Header.Set("Upgrade-Insecure-Requests", "1")
+	req.Header.Set("Pragma", "no-cache")
+	req.Header.Set("Cache-Control", "no-cache")
+	// req.Header.Set("TE", "Trailer")
+
+	r, err := client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	if r.StatusCode < 200 || r.StatusCode > 299 {
+		return nil, fmt.Errorf("bad status %s", r.Status)
+	}
+	return r, nil
+}
+
+func getJson(rawurl string, target interface{}) error {
+	r, err := get(rawurl)
 	if err != nil {
 		return err
 	}
 	defer r.Body.Close()
-	return errors.Wrapf(json.NewDecoder(r.Body).Decode(target), "failed to get json at '%s'", url)
+	return errors.Wrapf(json.NewDecoder(r.Body).Decode(target), "failed to get json at '%s'", rawurl)
 }
