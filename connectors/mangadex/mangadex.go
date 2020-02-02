@@ -242,27 +242,23 @@ func get(rawurl string) (*http.Response, error) {
 	if err != nil {
 		return nil, err
 	}
-	// req.Header.Set("User-Agent", "curl/7.68.0")
-	// req.Header.Set("Accept", "*/*")
 
-	// req.Header.Set("User-Agent", "Mozilla/5.0 (X11; Linux x86_64; rv:71.0) Gecko/20100101 Firefox/71.0")
-	// req.Header.Set("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8")
-	// req.Header.Set("Accept-Language", "en-US,en;q=0.")
-	// req.Header.Set("DNT", "1")
-	// req.Header.Set("Connection", "keep-alive")
-	// req.Header.Set("Upgrade-Insecure-Requests", "1")
-	// req.Header.Set("Pragma", "no-cache")
-	// req.Header.Set("Cache-Control", "no-cache")
+	req.Header.Set("User-Agent", "Mozilla/5.0 (X11; Linux x86_64; rv:71.0) Gecko/20100101 Firefox/71.0")
+	req.Header.Set("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8")
+	req.Header.Set("Accept-Language", "en-US,en;q=0.")
+	req.Header.Set("DNT", "1")
+	req.Header.Set("Connection", "keep-alive")
+	req.Header.Set("Upgrade-Insecure-Requests", "1")
+	req.Header.Set("Pragma", "no-cache")
+	req.Header.Set("Cache-Control", "no-cache")
 
 	r, err := client.Do(req)
 	if err != nil {
 		return nil, err
 	}
-	// io.Copy(os.Stdout, r.Body)
 	if r.StatusCode < 200 || r.StatusCode > 299 {
 		return nil, fmt.Errorf("bad status %s", r.Status)
 	}
-	os.Exit(1)
 	return r, nil
 }
 
