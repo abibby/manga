@@ -14,7 +14,7 @@
 
 package main
 
-import "github.com/zwzn/manga/cmd"
+import "github.com/abibby/manga/cmd"
 
 func main() {
 	cmd.Execute()

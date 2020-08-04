@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	"github.com/PuerkitoBio/goquery"
-	"github.com/zwzn/manga/site"
+	"github.com/abibby/manga/site"
 )
 
 var extractNumberRE = regexp.MustCompile("\\d+(\\.\\d+)?")

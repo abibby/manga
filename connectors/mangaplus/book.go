@@ -12,8 +12,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/zwzn/manga/connectors/mangaplus/mpproto"
-	"github.com/zwzn/manga/site"
+	"github.com/abibby/manga/connectors/mangaplus/mpproto"
+	"github.com/abibby/manga/site"
 )
 
 type Book struct {

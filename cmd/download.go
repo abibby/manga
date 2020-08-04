@@ -21,13 +21,13 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
-	"github.com/zwzn/manga/site"
+	"github.com/abibby/manga/site"
 
 	// Connectors
-	_ "github.com/zwzn/manga/connectors/jaiminisbox"
-	_ "github.com/zwzn/manga/connectors/mangadex"
-	_ "github.com/zwzn/manga/connectors/mangarock"
-	_ "github.com/zwzn/manga/connectors/mangaplus"
+	_ "github.com/abibby/manga/connectors/jaiminisbox"
+	_ "github.com/abibby/manga/connectors/mangadex"
+	_ "github.com/abibby/manga/connectors/mangarock"
+	_ "github.com/abibby/manga/connectors/mangaplus"
 )
 
 // downloadCmd represents the download command

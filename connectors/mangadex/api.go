@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/zwzn/manga/site"
+	"github.com/abibby/manga/site"
 )
 
 type MangaDexSeriesChapter struct {

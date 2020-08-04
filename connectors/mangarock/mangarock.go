@@ -5,7 +5,7 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/zwzn/manga/site"
+	"github.com/abibby/manga/site"
 )
 
 // curl 'https://api.mangarockhd.com/query/web401/manga_detail?country=Canada'

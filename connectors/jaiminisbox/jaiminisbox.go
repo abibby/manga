@@ -3,7 +3,7 @@ package jaiminisbox
 import (
 	"net/url"
 
-	"github.com/zwzn/manga/site"
+	"github.com/abibby/manga/site"
 )
 
 type JaiminisBox struct {

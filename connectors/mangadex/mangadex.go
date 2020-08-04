@@ -17,7 +17,7 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/spf13/viper"
-	"github.com/zwzn/manga/site"
+	"github.com/abibby/manga/site"
 	"golang.org/x/text/transform"
 	"golang.org/x/text/unicode/norm"
 )

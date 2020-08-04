@@ -8,7 +8,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/zwzn/manga/site"
+	"github.com/abibby/manga/site"
 )
 
 type MangaRockSeries struct {

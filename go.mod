@@ -1,4 +1,4 @@
-module github.com/zwzn/manga
+module github.com/abibby/manga
 
 go 1.13
 

@@ -7,7 +7,7 @@ import (
 	"io"
 	"io/ioutil"
 
-	"github.com/zwzn/manga/site"
+	"github.com/abibby/manga/site"
 )
 
 type Book struct {
