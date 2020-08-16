@@ -16,8 +16,8 @@ import (
 	"github.com/mmcdole/gofeed"
 	"github.com/pkg/errors"
 
-	"github.com/spf13/viper"
 	"github.com/abibby/manga/site"
+	"github.com/spf13/viper"
 	"golang.org/x/text/transform"
 	"golang.org/x/text/unicode/norm"
 )
@@ -100,8 +100,8 @@ func mangaDexDownload(rawurl string, from int64) ([]site.Book, error) {
 	}
 	u.Host = hostName
 	switch parts[1] {
-	// case "manga", "title":
-	// 	return mangaDexDownloadSeries(parts[2], from)
+	case "manga", "title":
+		return mangaDexDownloadSeries(parts[2], from)
 	case "rss":
 		return mangaDexDownloadRSS(u.String())
 	}
@@ -110,19 +110,19 @@ func mangaDexDownload(rawurl string, from int64) ([]site.Book, error) {
 
 }
 
-// func mangaDexDownloadSeries(id string, from int64) ([]site.Book, error) {
+func mangaDexDownloadSeries(id string, from int64) ([]site.Book, error) {
 
-// 	idI, err := strconv.Atoi(id)
-// 	if err != nil {
-// 		return nil, err
-// 	}
-// 	series, err := Series(idI)
-// 	if err != nil {
-// 		return nil, err
-// 	}
-// 	https://mangadex.org/rss/7nCrX9Yzb5QAgNScxmBkFHGyqat4ER8d/manga_id/16617
-// 	return series.download()
-// }
+	idI, err := strconv.Atoi(id)
+	if err != nil {
+		return nil, err
+	}
+	series, err := Series(idI)
+	if err != nil {
+		return nil, err
+	}
+
+	return series.download()
+}
 
 func mangaDexDownloadRSS(rawurl string) ([]site.Book, error) {
 	fp := gofeed.NewParser()

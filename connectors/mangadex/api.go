@@ -3,6 +3,7 @@ package mangadex
 import (
 	"fmt"
 	"path/filepath"
+	"strconv"
 	"strings"
 
 	"github.com/abibby/manga/site"
@@ -22,6 +23,23 @@ type MangaDexSeriesChapter struct {
 	// GroupName3 *string `json:"group_name_3"`
 	Timestamp int64 `json:"timestamp"`
 }
+
+func (s *MangaDexSeriesChapter) ChapterF64() float64 {
+	chapter, err := strconv.ParseFloat(s.Volume, 64)
+	if err != nil {
+		return 0
+	}
+	return chapter
+}
+
+func (s *MangaDexSeriesChapter) VolumeI() int {
+	volume, err := strconv.Atoi(s.Volume)
+	if err != nil {
+		return 0
+	}
+	return volume
+}
+
 type MangaDexManga struct {
 	// CoverURL    string  `json:"cover_url"`
 	// Description string  `json:"description"`

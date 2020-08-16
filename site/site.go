@@ -9,6 +9,7 @@ import (
 	"net/url"
 	"os"
 	fp "path/filepath"
+	"sort"
 	"time"
 
 	"github.com/spf13/viper"
@@ -97,7 +98,9 @@ func download(site MangaSite, url string, fromChapter int64) error {
 	if err != nil {
 		return err
 	}
-
+	sort.Slice(books, func(i, j int) bool {
+		return folder(books[i]) < folder(books[j])
+	})
 	for _, book := range books {
 		if book.Chapter() < float64(fromChapter) {
 			continue
