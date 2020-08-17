@@ -25,7 +25,7 @@ type MangaDexSeriesChapter struct {
 }
 
 func (s *MangaDexSeriesChapter) ChapterF64() float64 {
-	chapter, err := strconv.ParseFloat(s.Volume, 64)
+	chapter, err := strconv.ParseFloat(s.Chapter, 64)
 	if err != nil {
 		return 0
 	}
