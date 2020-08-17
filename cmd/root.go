@@ -53,6 +53,7 @@ func init() {
 	rootCmd.PersistentFlags().StringP("language", "l", "en", "the language to download chapters in")
 
 	viper.BindPFlag("language", rootCmd.PersistentFlags().Lookup("language"))
+	viper.SetDefault("language", "en")
 	viper.BindPFlag("upload-path", rootCmd.PersistentFlags().Lookup("upload-path"))
 	viper.BindPFlag("dir", rootCmd.PersistentFlags().Lookup("dir"))
 }

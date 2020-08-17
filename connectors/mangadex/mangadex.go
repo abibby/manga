@@ -121,7 +121,7 @@ func mangaDexDownloadSeries(id string, from int64) ([]site.Book, error) {
 		return nil, err
 	}
 
-	return series.download()
+	return series.download(viper.GetString("language"))
 }
 
 func mangaDexDownloadRSS(rawurl string) ([]site.Book, error) {
