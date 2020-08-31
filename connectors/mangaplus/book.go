@@ -40,6 +40,12 @@ func books(uri string) ([]site.Book, error) {
 	}
 
 	bs := []site.Book{}
+	for _, ch := range result.GetTitleDetailView().GetFirstChapterList() {
+		bs = append(bs, &Book{
+			title:   result.GetTitleDetailView(),
+			chapter: ch,
+		})
+	}
 	for _, ch := range result.GetTitleDetailView().GetLastChapterList() {
 		bs = append(bs, &Book{
 			title:   result.GetTitleDetailView(),
