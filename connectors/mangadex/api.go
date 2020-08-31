@@ -84,8 +84,8 @@ type MangaDexChapter struct {
 	Comments  int64    `json:"comments"`
 	Server    string   `json:"server"`
 	Pages     []string `json:"page_array"`
-	LongStrip int64    `json:"long_strip"`
-	Status    string   `json:"status"`
+	// LongStrip int64    `json:"long_strip"`
+	Status string `json:"status"`
 }
 
 func (s *MangaDexChapter) ImageURLs() []site.Page {
