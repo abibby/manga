@@ -1,83 +1,46 @@
 package mangadex
 
 import (
-	"fmt"
 	"strconv"
-	"time"
 
 	"github.com/abibby/manga/site"
+	"github.com/abibby/mangadexv5"
 )
 
 type Book struct {
-	id      int
-	series  string
-	chapter float64
-	volume  int
-	// seriesChapter *MangaDexSeriesChapter
-	mdChapter *MangaDexChapter
-	mdSeries  *MangaDexSeries
+	mdChapter *mangadexv5.Chapter
 }
 
 var _ site.Book = &Book{}
 
-func NewBook(id int, series string, chapter float64, volume int) *Book {
-	return &Book{
-		id:      id,
-		series:  series,
-		chapter: chapter,
-		volume:  volume,
-	}
+func NewBook(chapter *mangadexv5.Chapter) *Book {
+	return &Book{mdChapter: chapter}
 }
 
 func (b *Book) Pages() []site.Page {
-	chapter := b.mangaDexChapter()
-	return chapter.ImageURLs()
+	pages := []site.Page{}
+	return pages
 }
 func (b *Book) ID() string {
-	return fmt.Sprint(b.id)
+	return b.mdChapter.ID
 }
 func (b *Book) Series() string {
-	return b.series
+	return b.mdChapter.Manga().Title.String()
 }
 func (b *Book) Chapter() float64 {
-	return b.chapter
+	chapter, _ := strconv.ParseFloat(b.mdChapter.Chapter, 64)
+	return chapter
 }
 func (b *Book) Volume() int {
-	return b.volume
+	return b.mdChapter.Volume.Value()
 }
 func (b *Book) Info() *site.BookInfo {
-	chapter := b.mangaDexChapter()
-	series := b.mangaDexSeries()
-
 	info := &site.BookInfo{}
-	info.Author = stripCtlAndExtFromUnicode(series.Manga.Author)
-	info.Series = stripCtlAndExtFromUnicode(b.series)
-	info.Title = stripCtlAndExtFromUnicode(chapter.Title)
+	// info.Author = stripCtlAndExtFromUnicode(b.mdChapter.Manga().Author().Name)
+	info.Series = stripCtlAndExtFromUnicode(b.mdChapter.Manga().Title.String())
+	info.Title = stripCtlAndExtFromUnicode(b.mdChapter.Title)
 	info.Chapter = b.Chapter()
-	info.Volume, _ = strconv.Atoi(chapter.Volume)
-	info.DateReleased = time.Unix(chapter.Timestamp, 0)
+	info.Volume = b.Volume()
+	info.DateReleased = b.mdChapter.PublishAt
 	return info
-}
-
-func (b *Book) mangaDexChapter() *MangaDexChapter {
-	if b.mdChapter == nil {
-		var err error
-		b.mdChapter, err = Chapter(b.id)
-		if err != nil {
-			panic(err)
-		}
-	}
-	return b.mdChapter
-}
-
-func (b *Book) mangaDexSeries() *MangaDexSeries {
-	if b.mdSeries == nil {
-		var err error
-		chapter := b.mangaDexChapter()
-		b.mdSeries, err = chapter.Series()
-		if err != nil {
-			panic(err)
-		}
-	}
-	return b.mdSeries
 }

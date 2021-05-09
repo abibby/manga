@@ -20,14 +20,15 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/spf13/cobra"
 	"github.com/abibby/manga/site"
+	"github.com/spf13/cobra"
 
 	// Connectors
+	_ "github.com/abibby/manga/connectors/crunchyroll"
 	_ "github.com/abibby/manga/connectors/jaiminisbox"
 	_ "github.com/abibby/manga/connectors/mangadex"
-	_ "github.com/abibby/manga/connectors/mangarock"
 	_ "github.com/abibby/manga/connectors/mangaplus"
+	_ "github.com/abibby/manga/connectors/mangarock"
 )
 
 // downloadCmd represents the download command
