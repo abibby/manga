@@ -3,6 +3,8 @@ package site
 import (
 	"archive/zip"
 	"fmt"
+	"image"
+	"image/png"
 	"io"
 	"os"
 	fp "path/filepath"
@@ -30,12 +32,17 @@ func saveFile(site MangaSite, page Page, path string) error {
 	if err != nil {
 		return err
 	}
-	// Use io.Copy to just dump the response body to the file. This supports huge files
-	_, err = io.Copy(file, body)
+	defer file.Close()
+
+	img, _, err := image.Decode(body)
 	if err != nil {
 		return err
 	}
-	file.Close()
+
+	err = png.Encode(file, img)
+	if err != nil {
+		return err
+	}
 
 	return nil
 }
