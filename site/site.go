@@ -148,7 +148,10 @@ func chapterExists(book Book) bool {
 
 func downloadBook(site MangaSite, book Book) error {
 	folder := folder(book)
-	os.MkdirAll(folder, 0777)
+	err := os.MkdirAll(folder, 0777)
+	if err != nil {
+		return err
+	}
 	for i, image := range book.Pages() {
 		ext := ""
 		u, err := url.Parse(image.URL())

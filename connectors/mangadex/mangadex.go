@@ -108,7 +108,12 @@ func mangaDexDownloadSeries(id string, from int64) ([]site.Book, error) {
 	// if err != nil {
 	// 	return nil, err
 	// }
-	c := mangadexv5.NewClient("./md-token.json")
+	c := mangadexv5.NewClient()
+	err := c.Authenticate(viper.GetString("mangadex.username"), viper.GetString("mangadex.password"), "./md-token.json")
+	if err != nil {
+		return nil, err
+	}
+
 	chapters, _, err := c.UserFeedChapters(&mangadexv5.UserFeedChaptersRequest{
 		Locales: []string{"en"},
 	})
@@ -124,7 +129,7 @@ func mangaDexDownloadSeries(id string, from int64) ([]site.Book, error) {
 	books := []site.Book{}
 
 	for _, chapter := range chapters {
-		books = append(books, NewBook(chapter))
+		books = append(books, NewBook(c, chapter))
 	}
 
 	return books, nil

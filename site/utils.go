@@ -2,8 +2,8 @@ package site
 
 import (
 	"archive/zip"
+	"fmt"
 	"io"
-	"log"
 	"os"
 	fp "path/filepath"
 	"strings"
@@ -11,9 +11,9 @@ import (
 
 // https://stackoverflow.com/a/22417396
 func saveFile(site MangaSite, page Page, path string) error {
-	response, e := client.Get(page.URL())
-	if e != nil {
-		log.Fatal(e)
+	response, err := client.Get(page.URL())
+	if err != nil {
+		return fmt.Errorf("failed to fetch image: %v", err)
 	}
 
 	defer response.Body.Close()

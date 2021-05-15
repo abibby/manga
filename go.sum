@@ -8,6 +8,16 @@ github.com/abibby/mangadexv5 v0.1.1 h1:l5V2PhC4X2BX1RLxaaGCooRUAylcTdBo6OR98HUNY
 github.com/abibby/mangadexv5 v0.1.1/go.mod h1:obkT8YqPCZh29x9q+c8p1P9KdV98Z+by1rHXDEf0zlY=
 github.com/abibby/mangadexv5 v0.1.2 h1:uWzX8Oh6+wUeTqbonDMK2YQZOQ9TS4C4RHH50vX2pR0=
 github.com/abibby/mangadexv5 v0.1.2/go.mod h1:obkT8YqPCZh29x9q+c8p1P9KdV98Z+by1rHXDEf0zlY=
+github.com/abibby/mangadexv5 v0.1.3 h1:SNDFH+65Ke25R1Nnx/2poeA/+Lt2Yk4DNLiSg+m/BqI=
+github.com/abibby/mangadexv5 v0.1.3/go.mod h1:obkT8YqPCZh29x9q+c8p1P9KdV98Z+by1rHXDEf0zlY=
+github.com/abibby/mangadexv5 v0.2.0 h1:HJxWugaqTgw56moTpAvJ1DZbYMuZS/IjnqpmOswSGkg=
+github.com/abibby/mangadexv5 v0.2.0/go.mod h1:obkT8YqPCZh29x9q+c8p1P9KdV98Z+by1rHXDEf0zlY=
+github.com/abibby/mangadexv5 v0.2.1 h1:o73uTcYsJ5OCmgyGTK4GKGHgcfpJ5AVw1aK2LSQBaoI=
+github.com/abibby/mangadexv5 v0.2.1/go.mod h1:obkT8YqPCZh29x9q+c8p1P9KdV98Z+by1rHXDEf0zlY=
+github.com/abibby/mangadexv5 v0.2.2 h1:lE7h1SyMtxx4HFqMdpdtglkAe+HYdMDPJwUIA+ngG20=
+github.com/abibby/mangadexv5 v0.2.2/go.mod h1:obkT8YqPCZh29x9q+c8p1P9KdV98Z+by1rHXDEf0zlY=
+github.com/abibby/mangadexv5 v0.2.3 h1:zQpige0bexrxWBuYAUNoZrYYpQjzKrbvzqcFRJsO84E=
+github.com/abibby/mangadexv5 v0.2.3/go.mod h1:obkT8YqPCZh29x9q+c8p1P9KdV98Z+by1rHXDEf0zlY=
 github.com/abibby/nulls v0.0.0-20201012135326-e405c54bf4e5 h1:WLc+QpFgDj9HUZ9Rfl+iAYQ0hlUVpZ6pX5BAq/yuwGM=
 github.com/abibby/nulls v0.0.0-20201012135326-e405c54bf4e5/go.mod h1:Nm6/cK/PYDg+RwGRv5/nAXGJZfu4nGHFp201Dg1HKWQ=
 github.com/alecthomas/template v0.0.0-20160405071501-a0175ee3bccc/go.mod h1:LOuyumcjzFXgccqObfd/Ljyb9UuFJ6TxHnclSeseNhc=
