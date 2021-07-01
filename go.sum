@@ -20,6 +20,8 @@ github.com/abibby/mangadexv5 v0.2.3 h1:zQpige0bexrxWBuYAUNoZrYYpQjzKrbvzqcFRJsO8
 github.com/abibby/mangadexv5 v0.2.3/go.mod h1:obkT8YqPCZh29x9q+c8p1P9KdV98Z+by1rHXDEf0zlY=
 github.com/abibby/mangadexv5 v0.2.4 h1:NJkQPUgGmf3plgU1LnXABtjsTTG0cUwEs3uJHmDry+M=
 github.com/abibby/mangadexv5 v0.2.4/go.mod h1:obkT8YqPCZh29x9q+c8p1P9KdV98Z+by1rHXDEf0zlY=
+github.com/abibby/mangadexv5 v0.2.5 h1:1QL8TRUAfQMuTJ8W+96ErNoNBvB7DvRGPGUZs8X8fYs=
+github.com/abibby/mangadexv5 v0.2.5/go.mod h1:obkT8YqPCZh29x9q+c8p1P9KdV98Z+by1rHXDEf0zlY=
 github.com/abibby/nulls v0.0.0-20201012135326-e405c54bf4e5 h1:WLc+QpFgDj9HUZ9Rfl+iAYQ0hlUVpZ6pX5BAq/yuwGM=
 github.com/abibby/nulls v0.0.0-20201012135326-e405c54bf4e5/go.mod h1:Nm6/cK/PYDg+RwGRv5/nAXGJZfu4nGHFp201Dg1HKWQ=
 github.com/alecthomas/template v0.0.0-20160405071501-a0175ee3bccc/go.mod h1:LOuyumcjzFXgccqObfd/Ljyb9UuFJ6TxHnclSeseNhc=

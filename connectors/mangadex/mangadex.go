@@ -111,25 +111,29 @@ func mangaDexDownloadSeries(id string, from int64) ([]site.Book, error) {
 		return nil, err
 	}
 
-	chapters, _, err := c.ChapterList(&mangadexv5.ChapterListRequest{
+	var chapters []*mangadexv5.Chapter
+	var response *mangadexv5.PaginatedResponse
+	request := &mangadexv5.ChapterListRequest{
 		TranslatedLanguage: []string{"en"},
 		MangaID:            id,
-	})
-	if err != nil {
-		return nil, err
 	}
-
-	err = c.AttachManga(chapters)
-	if err != nil {
-		return nil, err
-	}
-
 	books := []site.Book{}
 
-	for _, chapter := range chapters {
-		books = append(books, NewBook(c, chapter))
-	}
+	for mangadexv5.EachPage(request, response) {
+		chapters, response, err = c.ChapterList(request)
+		if err != nil {
+			return nil, err
+		}
 
+		err = c.AttachManga(chapters)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, chapter := range chapters {
+			books = append(books, NewBook(c, chapter))
+		}
+	}
 	return books, nil
 }
 
@@ -145,22 +149,28 @@ func mangaDexDownloadFeed(from int64) ([]site.Book, error) {
 		return nil, err
 	}
 
-	chapters, _, err := c.UserFeedChapters(&mangadexv5.UserFeedChaptersRequest{
+	var chapters []*mangadexv5.Chapter
+	var response *mangadexv5.PaginatedResponse
+	request := &mangadexv5.UserFeedChaptersRequest{
 		TranslatedLanguage: []string{"en"},
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	err = c.AttachManga(chapters)
-	if err != nil {
-		return nil, err
 	}
 
 	books := []site.Book{}
 
-	for _, chapter := range chapters {
-		books = append(books, NewBook(c, chapter))
+	for mangadexv5.EachPage(request, response) {
+		chapters, response, err = c.UserFeedChapters(request)
+		if err != nil {
+			return nil, err
+		}
+
+		err = c.AttachManga(chapters)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, chapter := range chapters {
+			books = append(books, NewBook(c, chapter))
+		}
 	}
 
 	return books, nil
