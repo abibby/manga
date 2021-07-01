@@ -91,18 +91,49 @@ func mangaDexDownload(rawurl string, from int64) ([]site.Book, error) {
 		return nil, fmt.Errorf("invalid url: not enough parts")
 	}
 	u.Host = hostName
+
+	if u.Path == "/title/feed" {
+		return mangaDexDownloadFeed(from)
+	}
+
 	switch parts[1] {
 	case "manga", "title":
 		return mangaDexDownloadSeries(parts[2], from)
-	case "rss":
-		// return mangaDexDownloadRSS(u.String())
 	}
 
 	return nil, fmt.Errorf("invalid url: not a series or list")
-
 }
 
 func mangaDexDownloadSeries(id string, from int64) ([]site.Book, error) {
+	c := mangadexv5.NewClient()
+	err := c.Authenticate(viper.GetString("mangadex.username"), viper.GetString("mangadex.password"), "./md-token.json")
+	if err != nil {
+		return nil, err
+	}
+
+	chapters, _, err := c.ChapterList(&mangadexv5.ChapterListRequest{
+		TranslatedLanguage: []string{"en"},
+		MangaID:            id,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	err = c.AttachManga(chapters)
+	if err != nil {
+		return nil, err
+	}
+
+	books := []site.Book{}
+
+	for _, chapter := range chapters {
+		books = append(books, NewBook(c, chapter))
+	}
+
+	return books, nil
+}
+
+func mangaDexDownloadFeed(from int64) ([]site.Book, error) {
 
 	// idI, err := strconv.Atoi(id)
 	// if err != nil {
@@ -115,7 +146,7 @@ func mangaDexDownloadSeries(id string, from int64) ([]site.Book, error) {
 	}
 
 	chapters, _, err := c.UserFeedChapters(&mangadexv5.UserFeedChaptersRequest{
-		Locales: []string{"en"},
+		TranslatedLanguage: []string{"en"},
 	})
 	if err != nil {
 		return nil, err
