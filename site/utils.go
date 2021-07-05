@@ -3,18 +3,13 @@ package site
 import (
 	"archive/zip"
 	"fmt"
-	"image"
-	_ "image/gif"
-	_ "image/jpeg"
-	"image/png"
 	"io"
 	"os"
 	fp "path/filepath"
 	"strings"
-
-	_ "golang.org/x/image/webp"
-
-	"github.com/pkg/errors"
+	// _ "image/gif"
+	// _ "image/jpeg"
+	// _ "golang.org/x/image/webp"
 )
 
 func saveFile(site MangaSite, page Page, path string) error {
@@ -39,17 +34,16 @@ func saveFile(site MangaSite, page Page, path string) error {
 	}
 	defer file.Close()
 
-	img, _, err := image.Decode(body)
-	if err != nil {
-		return errors.Wrapf(err, "could not decode image '%s'", page.URL())
-	}
+	// buff := &bytes.Buffer{}
 
-	err = png.Encode(file, img)
-	if err != nil {
-		return err
-	}
+	// _, _, err = image.Decode(io.TeeReader(body, buff))
+	// if err != nil {
+	// 	return errors.Wrapf(err, "could not decode image '%s'", page.URL())
+	// }
 
-	return nil
+	_, err = io.Copy(file, body)
+
+	return err
 }
 
 // from http://blog.ralch.com/tutorial/golang-working-with-zip/
