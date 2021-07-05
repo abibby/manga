@@ -4,14 +4,19 @@ import (
 	"archive/zip"
 	"fmt"
 	"image"
+	_ "image/gif"
+	_ "image/jpeg"
 	"image/png"
 	"io"
 	"os"
 	fp "path/filepath"
 	"strings"
+
+	_ "golang.org/x/image/webp"
+
+	"github.com/pkg/errors"
 )
 
-// https://stackoverflow.com/a/22417396
 func saveFile(site MangaSite, page Page, path string) error {
 	response, err := client.Get(page.URL())
 	if err != nil {
@@ -36,7 +41,7 @@ func saveFile(site MangaSite, page Page, path string) error {
 
 	img, _, err := image.Decode(body)
 	if err != nil {
-		return err
+		return errors.Wrapf(err, "could not decode image '%s'", page.URL())
 	}
 
 	err = png.Encode(file, img)
