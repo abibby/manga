@@ -154,6 +154,7 @@ func mangaDexDownloadFeed(from int64) ([]site.Book, error) {
 	chapters, _, err := c.UserFeedChapters(&mangadexv5.UserFeedChaptersRequest{
 		TranslatedLanguage: []string{"en"},
 		Limit:              100,
+		OrderCreatedAt:     mangadexv5.OrderDescending,
 	})
 	if err != nil {
 		return nil, err
