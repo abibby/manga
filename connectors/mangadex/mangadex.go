@@ -92,7 +92,7 @@ func mangaDexDownload(rawurl string, from int64) ([]site.Book, error) {
 	}
 	u.Host = hostName
 
-	if u.Path == "/title/feed" {
+	if u.Path == "/titles/feed" {
 		return mangaDexDownloadFeed(from)
 	}
 
@@ -149,28 +149,23 @@ func mangaDexDownloadFeed(from int64) ([]site.Book, error) {
 		return nil, err
 	}
 
-	var chapters []*mangadexv5.Chapter
-	var response *mangadexv5.PaginatedResponse
-	request := &mangadexv5.UserFeedChaptersRequest{
-		TranslatedLanguage: []string{"en"},
-	}
-
 	books := []site.Book{}
 
-	for mangadexv5.EachPage(request, response) {
-		chapters, response, err = c.UserFeedChapters(request)
-		if err != nil {
-			return nil, err
-		}
+	chapters, _, err := c.UserFeedChapters(&mangadexv5.UserFeedChaptersRequest{
+		TranslatedLanguage: []string{"en"},
+		Limit:              100,
+	})
+	if err != nil {
+		return nil, err
+	}
 
-		err = c.AttachManga(chapters)
-		if err != nil {
-			return nil, err
-		}
+	err = c.AttachManga(chapters)
+	if err != nil {
+		return nil, err
+	}
 
-		for _, chapter := range chapters {
-			books = append(books, NewBook(c, chapter))
-		}
+	for _, chapter := range chapters {
+		books = append(books, NewBook(c, chapter))
 	}
 
 	return books, nil
