@@ -116,6 +116,7 @@ func mangaDexDownloadSeries(id string, from int64) ([]site.Book, error) {
 	request := &mangadexv5.ChapterListRequest{
 		TranslatedLanguage: []string{"en"},
 		MangaID:            id,
+		Limit:              100,
 	}
 	books := []site.Book{}
 
