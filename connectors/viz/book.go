@@ -231,7 +231,12 @@ func (b *Book) Volume() int {
 	return 0
 }
 func (b *Book) Info() *site.BookInfo {
-	return &site.BookInfo{}
+	return &site.BookInfo{
+		Series:  b.Series(),
+		Volume:  b.Volume(),
+		Chapter: b.Chapter(),
+		Web:     b.url,
+	}
 }
 
 type Page struct {
