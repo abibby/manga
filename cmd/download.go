@@ -29,6 +29,7 @@ import (
 	_ "github.com/abibby/manga/connectors/mangadex"
 	_ "github.com/abibby/manga/connectors/mangaplus"
 	_ "github.com/abibby/manga/connectors/mangarock"
+	_ "github.com/abibby/manga/connectors/viz"
 )
 
 // downloadCmd represents the download command

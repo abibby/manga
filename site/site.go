@@ -30,6 +30,20 @@ type ImageDecrypter interface {
 	ImageDecrypt(io.Reader) (io.Reader, string)
 }
 
+type ErrorReader struct{ err error }
+
+var _ io.Reader = &ErrorReader{}
+
+func NewErrorReader(err error) *ErrorReader {
+	return &ErrorReader{
+		err: err,
+	}
+}
+
+func (er *ErrorReader) Read([]byte) (int, error) {
+	return 0, er.err
+}
+
 // BookInfo is the data that will be put into the book.json file in the cbz
 type BookInfo struct {
 	Series          string    `json:"series,omitempty"`

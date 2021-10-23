@@ -1,7 +1,6 @@
 package mangarock
 
 import (
-	"io"
 	"net/url"
 	"strings"
 
@@ -60,12 +59,4 @@ func downloadSeries(id string) ([]site.Book, error) {
 	}
 	b := s.Books()
 	return b, nil
-}
-
-type errorReader struct{ err error }
-
-var _ io.Reader = &errorReader{}
-
-func (er *errorReader) Read([]byte) (int, error) {
-	return 0, er.err
 }

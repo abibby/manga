@@ -69,7 +69,7 @@ func (m *Page) ImageDecrypt(encrypted io.Reader) (io.Reader, string) {
 
 	b, err := ioutil.ReadAll(encrypted)
 	if err != nil {
-		return &errorReader{err}, "webp"
+		return site.NewErrorReader(err), "webp"
 	}
 	decrypted := make([]byte, 0, len(b)+15)
 	n := make([]byte, 4)
