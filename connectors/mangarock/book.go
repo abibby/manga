@@ -52,12 +52,13 @@ func (b *Book) Volume() int {
 }
 func (b *Book) Info() *site.BookInfo {
 	return &site.BookInfo{
-		Series:  b.Series(),
-		Title:   b.seriesChapter.Title(),
-		Volume:  b.seriesChapter.Volume(),
-		Chapter: b.Chapter(),
-		Summary: b.series.Description,
-		Author:  b.series.Author,
+		Series:      b.Series(),
+		Title:       b.seriesChapter.Title(),
+		Volume:      b.seriesChapter.Volume(),
+		Chapter:     b.Chapter(),
+		Summary:     b.series.Description,
+		Author:      b.series.Author,
+		RightToLeft: true,
 	}
 }
 

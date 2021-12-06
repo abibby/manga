@@ -104,6 +104,7 @@ func (b *Book) Info() *site.BookInfo {
 		Author:       b.title.GetTitle().GetAuthor(),
 		Web:          fmt.Sprintf("https://mangaplus.shueisha.co.jp/viewer/%d", b.chapter.GetChapterId()),
 		DateReleased: time.Unix(int64(b.chapter.GetStartTimeStamp()), 0),
+		RightToLeft:  true,
 	}
 }
 

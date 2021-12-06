@@ -49,13 +49,15 @@ func (b *Book) Volume() int {
 	return vol
 }
 func (b *Book) Info() *site.BookInfo {
-	info := &site.BookInfo{}
+	info := &site.BookInfo{
+		// Author:    stripCtlAndExtFromUnicode(b.mdChapter.Manga().Author().Name),
+		Series:       stripCtlAndExtFromUnicode(b.mdChapter.Manga().Title.String()),
+		Title:        stripCtlAndExtFromUnicode(b.mdChapter.Title),
+		Chapter:      b.Chapter(),
+		Volume:       b.Volume(),
+		DateReleased: b.mdChapter.PublishAt,
+		RightToLeft:  true,
+	}
 
-	// info.Author = stripCtlAndExtFromUnicode(b.mdChapter.Manga().Author().Name)
-	info.Series = stripCtlAndExtFromUnicode(b.mdChapter.Manga().Title.String())
-	info.Title = stripCtlAndExtFromUnicode(b.mdChapter.Title)
-	info.Chapter = b.Chapter()
-	info.Volume = b.Volume()
-	info.DateReleased = b.mdChapter.PublishAt
 	return info
 }

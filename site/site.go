@@ -58,6 +58,7 @@ type BookInfo struct {
 	CommunityRating float64   `json:"community_rating,omitempty"`
 	DateReleased    time.Time `json:"date_released,omitempty"`
 	Rating          float64   `json:"rating,omitempty"`
+	RightToLeft     bool      `json:"rtl,omitempty"`
 }
 
 type Page interface {

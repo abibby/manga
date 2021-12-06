@@ -39,9 +39,10 @@ func seriesBooks(rawurl string) ([]site.Book, error) {
 		books = append(books, &Book{
 			url: link,
 			info: site.BookInfo{
-				Title:   title,
-				Series:  series,
-				Chapter: chapter,
+				Title:       title,
+				Series:      series,
+				Chapter:     chapter,
+				RightToLeft: true,
 			},
 		})
 	})

@@ -232,10 +232,11 @@ func (b *Book) Volume() int {
 }
 func (b *Book) Info() *site.BookInfo {
 	return &site.BookInfo{
-		Series:  b.Series(),
-		Volume:  b.Volume(),
-		Chapter: b.Chapter(),
-		Web:     b.url,
+		Series:      b.Series(),
+		Volume:      b.Volume(),
+		Chapter:     b.Chapter(),
+		Web:         b.url,
+		RightToLeft: true,
 	}
 }
 
