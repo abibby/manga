@@ -2,17 +2,22 @@ package site
 
 import (
 	"archive/zip"
+	"bytes"
 	"fmt"
+	"image"
 	"io"
 	"os"
-	fp "path/filepath"
+	"path/filepath"
 	"strings"
-	// _ "image/gif"
-	// _ "image/jpeg"
-	// _ "golang.org/x/image/webp"
+
+	_ "image/png"
+	_ "image/gif"
+	_ "image/jpeg"
+	_ "golang.org/x/image/bmp"
+	_ "golang.org/x/image/webp"
 )
 
-func saveFile(site MangaSite, page Page, path string) error {
+func saveImage(site MangaSite, page Page, path string) error {
 	response, err := client.Get(page.URL())
 	if err != nil {
 		return fmt.Errorf("failed to fetch image: %v", err)
@@ -34,14 +39,14 @@ func saveFile(site MangaSite, page Page, path string) error {
 	}
 	defer file.Close()
 
-	// buff := &bytes.Buffer{}
+	buff := &bytes.Buffer{}
 
-	// _, _, err = image.Decode(io.TeeReader(body, buff))
-	// if err != nil {
-	// 	return errors.Wrapf(err, "could not decode image '%s'", page.URL())
-	// }
+	_, _, err = image.Decode(io.TeeReader(body, buff))
+	if err != nil {
+		return fmt.Errorf("could not decode image '%s': %v", page.URL(), err)
+	}
 
-	_, err = io.Copy(file, body)
+	_, err = io.Copy(file, buff)
 
 	return err
 }
@@ -57,7 +62,7 @@ func zipit(source, target string) error {
 	archive := zip.NewWriter(zipfile)
 	defer archive.Close()
 
-	fp.Walk(source, func(path string, info os.FileInfo, err error) error {
+	filepath.Walk(source, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}

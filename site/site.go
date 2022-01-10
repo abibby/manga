@@ -179,7 +179,7 @@ func downloadBook(site MangaSite, book Book) error {
 		if _, err := os.Stat(imageFile); err == nil {
 			continue
 		}
-		err = saveFile(site, image, imageFile)
+		err = saveImage(site, image, imageFile)
 		if err != nil {
 			return err
 		}

@@ -29,7 +29,7 @@ func (b *Book) Pages() []site.Page {
 
 	pages := []site.Page{}
 
-	for i := range b.mdChapter.Data {
+	for i := range atHomeServer.Chapter.Data {
 		pages = append(pages, site.DefaultPage(b.mdChapter.PageURL(atHomeServer, i)))
 	}
 	return pages

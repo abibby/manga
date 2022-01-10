@@ -52,7 +52,7 @@ Currently the installed connectors are %s.`, strings.Join(site.ConnectorNames(),
 
 			err = site.Download(url, from)
 			if err != nil {
-				fmt.Fprintf(os.Stderr, "There was an error downloading %s: %v", url, err)
+				fmt.Fprintf(os.Stderr, "There was an error downloading %s: %+v", url, err)
 			}
 		}
 		return nil
