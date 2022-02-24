@@ -132,7 +132,9 @@ func mangaDexDownloadSeries(id string, from int64) ([]site.Book, error) {
 		}
 
 		for _, chapter := range chapters {
-			books = append(books, NewBook(c, chapter))
+			if chapter.Pages > 0 {
+				books = append(books, NewBook(c, chapter))
+			}
 		}
 	}
 	return books, nil

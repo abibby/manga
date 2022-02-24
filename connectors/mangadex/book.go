@@ -41,7 +41,7 @@ func (b *Book) Series() string {
 	return b.mdChapter.Manga().Title.String()
 }
 func (b *Book) Chapter() float64 {
-	chapter, _ := strconv.ParseFloat(b.mdChapter.Chapter, 64)
+	chapter, _ := strconv.ParseFloat(b.mdChapter.Chapter.String(), 64)
 	return chapter
 }
 func (b *Book) Volume() int {
