@@ -38,7 +38,15 @@ func (b *Book) ID() string {
 	return b.mdChapter.ID
 }
 func (b *Book) Series() string {
-	return b.mdChapter.Manga().Title.String()
+	titles := b.mdChapter.Manga().Title
+	title, ok := titles["en"]
+	if ok {
+		return title
+	}
+	for _, t := range titles {
+		return t
+	}
+	return ""
 }
 func (b *Book) Chapter() float64 {
 	chapter, _ := strconv.ParseFloat(b.mdChapter.Chapter.String(), 64)
