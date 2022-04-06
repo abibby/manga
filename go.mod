@@ -3,12 +3,13 @@ module github.com/abibby/manga
 go 1.13
 
 require (
-	github.com/PuerkitoBio/goquery v1.7.1
+	github.com/PuerkitoBio/goquery v1.8.0
 	github.com/abibby/mangadexv5 v0.5.0
 	github.com/davecgh/go-spew v1.1.1
 	github.com/golang/protobuf v1.5.2
 	github.com/google/go-cmp v0.5.6 // indirect
 	github.com/mitchellh/go-homedir v1.1.0
+	github.com/mmcdole/gofeed v1.1.3 // indirect
 	github.com/rwcarlsen/goexif v0.0.0-20190401172101-9e8deecbddbd
 	github.com/spf13/cobra v0.0.5
 	github.com/spf13/viper v1.6.1

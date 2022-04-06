@@ -25,6 +25,7 @@ import (
 
 	// Connectors
 	// _ "github.com/abibby/manga/connectors/crunchyroll"
+	_ "github.com/abibby/manga/connectors/comikey"
 	_ "github.com/abibby/manga/connectors/jaiminisbox"
 	_ "github.com/abibby/manga/connectors/mangadex"
 	_ "github.com/abibby/manga/connectors/mangaplus"
