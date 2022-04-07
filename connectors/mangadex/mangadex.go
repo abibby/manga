@@ -126,33 +126,22 @@ func mangaDexDownloadSeries(id string, from int64) ([]site.Book, error) {
 			return nil, err
 		}
 
-		err = c.AttachManga(chapters)
+		newBooks, err := downloadChapters(c, chapters)
 		if err != nil {
 			return nil, err
 		}
 
-		for _, chapter := range chapters {
-			if chapter.Pages > 0 {
-				books = append(books, NewBook(c, chapter))
-			}
-		}
+		books = append(books, newBooks...)
 	}
 	return books, nil
 }
 
 func mangaDexDownloadFeed(from int64) ([]site.Book, error) {
-
-	// idI, err := strconv.Atoi(id)
-	// if err != nil {
-	// 	return nil, err
-	// }
 	c := mangadexv5.NewClient()
 	err := c.Authenticate(viper.GetString("mangadex.username"), viper.GetString("mangadex.password"), "./md-token.json")
 	if err != nil {
 		return nil, err
 	}
-
-	books := []site.Book{}
 
 	chapters, _, err := c.UserFeedChapters(&mangadexv5.UserFeedChaptersRequest{
 		TranslatedLanguage: []string{"en"},
@@ -163,15 +152,21 @@ func mangaDexDownloadFeed(from int64) ([]site.Book, error) {
 		return nil, err
 	}
 
-	err = c.AttachManga(chapters)
+	return downloadChapters(c, chapters)
+}
+
+func downloadChapters(c *mangadexv5.Client, chapters []*mangadexv5.Chapter) ([]site.Book, error) {
+	err := c.AttachManga(chapters)
 	if err != nil {
 		return nil, err
 	}
+	books := []site.Book{}
 
 	for _, chapter := range chapters {
-		books = append(books, NewBook(c, chapter))
+		if chapter.Pages > 0 {
+			books = append(books, NewBook(c, chapter))
+		}
 	}
-
 	return books, nil
 }
 
