@@ -10,22 +10,34 @@ import (
 	"path/filepath"
 	"strings"
 
-	_ "image/png"
 	_ "image/gif"
 	_ "image/jpeg"
+	_ "image/png"
+
 	_ "golang.org/x/image/bmp"
 	_ "golang.org/x/image/webp"
 )
 
 func saveImage(site MangaSite, page Page, path string) error {
-	response, err := client.Get(page.URL())
-	if err != nil {
-		return fmt.Errorf("failed to fetch image: %v", err)
+	var body io.Reader
+	var err error
+
+	if downloader, ok := page.(ImageDownloader); ok {
+		body, err = downloader.ImageDownload()
+		if err != nil {
+			return err
+		}
+	} else {
+		response, err := client.Get(page.URL())
+		if err != nil {
+			return fmt.Errorf("failed to fetch image: %v", err)
+		}
+
+		defer response.Body.Close()
+
+		body = response.Body
 	}
 
-	defer response.Body.Close()
-
-	body := io.Reader(response.Body)
 	if decoder, ok := page.(ImageDecrypter); ok {
 		ext := ""
 		body, ext = decoder.ImageDecrypt(body)

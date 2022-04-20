@@ -29,6 +29,9 @@ type MangaSite interface {
 type ImageDecrypter interface {
 	ImageDecrypt(io.Reader) (io.Reader, string)
 }
+type ImageDownloader interface {
+	ImageDownload() (io.Reader, error)
+}
 
 type ErrorReader struct{ err error }
 

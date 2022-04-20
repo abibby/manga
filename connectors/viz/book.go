@@ -130,12 +130,11 @@ func (b *Book) Pages() []site.Page {
 	//   });
 	pages := []site.Page{}
 	for i := 1; i < pageCount; i++ {
-		responseData, err := get(uri, fmt.Sprintf("https://www.viz.com/manga/get_manga_url?device_id=3&manga_id=%d&page=%d", mangaID, i))
-		if err != nil {
-			panic(err)
-		}
-		pageURI := string(responseData)
-
+		// responseData, err := get(uri, fmt.Sprintf("https://www.viz.com/manga/get_manga_url?device_id=3&manga_id=%d&page=%d", mangaID, i))
+		// if err != nil {
+		// 	panic(err)
+		// }
+		// pageURI := string(responseData)
 		// pageData, err := get(uri, pageURI)
 		// if err != nil {
 		// 	panic(err)
@@ -149,7 +148,7 @@ func (b *Book) Pages() []site.Page {
 		// os.Exit(1)
 
 		pages = append(pages, &Page{
-			url: pageURI,
+			url: fmt.Sprintf("https://www.viz.com/manga/get_manga_url?device_id=3&manga_id=%d&page=%d", mangaID, i),
 		})
 	}
 	// spew.Dump(pages)
@@ -246,10 +245,25 @@ type Page struct {
 
 var _ site.Page = &Page{}
 var _ site.ImageDecrypter = &Page{}
+var _ site.ImageDownloader = &Page{}
 
 func (p *Page) URL() string {
 	return p.url
 }
+
+func (p *Page) ImageDownload() (io.Reader, error) {
+	uri := "https://www.viz.com"
+	pageURI, err := get(uri, fmt.Sprintf(p.URL()))
+	if err != nil {
+		return nil, err
+	}
+	pageData, err := get(uri, string(pageURI))
+	if err != nil {
+		return nil, err
+	}
+	return bytes.NewBuffer(pageData), nil
+}
+
 func (p *Page) ImageDecrypt(encrypted io.Reader) (io.Reader, string) {
 	srcBytes, err := ioutil.ReadAll(encrypted)
 	if err != nil {
