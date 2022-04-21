@@ -19,24 +19,18 @@ import (
 )
 
 func saveImage(site MangaSite, page Page, path string) error {
-	var body io.Reader
-	var err error
-
-	if downloader, ok := page.(ImageDownloader); ok {
-		body, err = downloader.ImageDownload()
-		if err != nil {
-			return err
-		}
-	} else {
-		response, err := client.Get(page.URL())
-		if err != nil {
-			return fmt.Errorf("failed to fetch image: %v", err)
-		}
-
-		defer response.Body.Close()
-
-		body = response.Body
+	uri, err := page.URL()
+	if err != nil {
+		return err
 	}
+	response, err := client.Get(uri)
+	if err != nil {
+		return fmt.Errorf("failed to fetch image: %v", err)
+	}
+
+	defer response.Body.Close()
+
+	body := io.Reader(response.Body)
 
 	if decoder, ok := page.(ImageDecrypter); ok {
 		ext := ""
@@ -55,7 +49,7 @@ func saveImage(site MangaSite, page Page, path string) error {
 
 	_, _, err = image.Decode(io.TeeReader(body, buff))
 	if err != nil {
-		return fmt.Errorf("could not decode image '%s': %v", page.URL(), err)
+		return fmt.Errorf("could not decode image '%s': %v", uri, err)
 	}
 
 	_, err = io.Copy(file, buff)

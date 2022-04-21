@@ -245,23 +245,15 @@ type Page struct {
 
 var _ site.Page = &Page{}
 var _ site.ImageDecrypter = &Page{}
-var _ site.ImageDownloader = &Page{}
 
-func (p *Page) URL() string {
-	return p.url
-}
-
-func (p *Page) ImageDownload() (io.Reader, error) {
+func (p *Page) URL() (string, error) {
 	uri := "https://www.viz.com"
-	pageURI, err := get(uri, fmt.Sprintf(p.URL()))
+	pageURI, err := get(uri, fmt.Sprintf(p.url))
 	if err != nil {
-		return nil, err
+		return "", err
 	}
-	pageData, err := get(uri, string(pageURI))
-	if err != nil {
-		return nil, err
-	}
-	return bytes.NewBuffer(pageData), nil
+
+	return string(pageURI), nil
 }
 
 func (p *Page) ImageDecrypt(encrypted io.Reader) (io.Reader, string) {

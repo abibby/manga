@@ -29,9 +29,6 @@ type MangaSite interface {
 type ImageDecrypter interface {
 	ImageDecrypt(io.Reader) (io.Reader, string)
 }
-type ImageDownloader interface {
-	ImageDownload() (io.Reader, error)
-}
 
 type ErrorReader struct{ err error }
 
@@ -65,7 +62,7 @@ type BookInfo struct {
 }
 
 type Page interface {
-	URL() string
+	URL() (string, error)
 }
 
 // Book represents a book on a site.
@@ -88,8 +85,8 @@ type Book interface {
 
 type DefaultPage string
 
-func (p DefaultPage) URL() string {
-	return string(p)
+func (p DefaultPage) URL() (string, error) {
+	return string(p), nil
 }
 
 var magnaSites []MangaSite
@@ -171,10 +168,14 @@ func downloadBook(site MangaSite, book Book) error {
 		return err
 	}
 	for i, image := range book.Pages() {
-		ext := ""
-		u, err := url.Parse(image.URL())
+		uri, err := image.URL()
 		if err != nil {
-			ext = fp.Ext(image.URL())
+			return err
+		}
+		ext := ""
+		u, err := url.Parse(uri)
+		if err != nil {
+			ext = fp.Ext(uri)
 		} else {
 			ext = fp.Ext(u.Path)
 		}

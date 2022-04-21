@@ -145,8 +145,8 @@ func getPages(id string) []Page {
 var _ site.Page = &Page{}
 var _ site.ImageDecrypter = &Page{}
 
-func (p *Page) URL() string {
-	return p.url
+func (p *Page) URL() (string, error) {
+	return p.url, nil
 }
 func (p *Page) ImageDecrypt(encrypted io.Reader) (io.Reader, string) {
 

@@ -62,8 +62,8 @@ func (b *Book) Info() *site.BookInfo {
 	}
 }
 
-func (p *Page) URL() string {
-	return p.ImageURL
+func (p *Page) URL() (string, error) {
+	return p.ImageURL, nil
 }
 func (m *Page) ImageDecrypt(encrypted io.Reader) (io.Reader, string) {
 	const key = 0x65
