@@ -11,6 +11,7 @@ import (
 	"net/http"
 	"net/http/cookiejar"
 	"net/url"
+	"os"
 	"path/filepath"
 	"regexp"
 	"strconv"
@@ -19,7 +20,9 @@ import (
 
 	"github.com/PuerkitoBio/goquery"
 	"github.com/abibby/manga/site"
+	"github.com/davecgh/go-spew/spew"
 	"github.com/rwcarlsen/goexif/exif"
+	"github.com/spf13/viper"
 )
 
 var client *http.Client
@@ -63,14 +66,25 @@ func books(uri string) ([]site.Book, error) {
 		})
 	}
 
+	token, ok := d.Find(`input[name="authenticity_token"]`).Attr("value")
+	if ok {
+		_, err := get(uri, "https://www.viz.com/account/refresh_login_links")
+		if err != nil {
+			return nil, err
+		}
+
+		err = login(uri, token)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	return bs, nil
 }
 
 func (b *Book) Pages() []site.Page {
 	uri := "https://www.viz.com" + b.url
-	// const request = new Request(new URL(chapter.id, this.url));
-	// let response = await fetch(request);
-	// let responseData = await response.text();
+
 	_, err := get(uri, "https://www.viz.com/account/refresh_login_links")
 	if err != nil {
 		panic(err)
@@ -81,36 +95,17 @@ func (b *Book) Pages() []site.Page {
 		panic(err)
 	}
 
-	// let pageCount = 0;
-	// let mangaID = 0;
-
 	var pageCount = 0
 	var mangaID = 0
 
-	// if (chapter.id.startsWith("read/manga")) {
 	if strings.HasPrefix(b.url, "/read/manga") {
-		//   pageCount = parseInt(
-		//     [
-		//       ...responseData.matchAll(
-		//         /<div\s+class="mar-b-md">\s*<strong>\s*Length\s*<\/strong>\s+(\d+)\s+pages\s*<\/div>/g
-		//       ),
-		//     ][0][1]
-		//   );
-		//   mangaID = parseInt(
-		//     [...responseData.matchAll(/var\s+mangaCommonId\s*=\s*(\d+)/g)][0][1]
-		//   );
-		// } else if (chapter.id.startsWith("/shonenjump")) {
 		panic("/read/manga urls are not supported")
 	} else if strings.HasPrefix(b.url, "/shonenjump") {
-		//   pageCount = parseInt(
-		//     [...responseData.matchAll(/var\s+pages\s*=\s*(\d+)/g)][0][1]
-		//   );
 		bPageCount := regexp.MustCompile(`var\s+pages\s*=\s*(\d+)`).FindSubmatch(responseData)[1]
 		pageCount, err = strconv.Atoi(string(bPageCount))
 		if err != nil {
 			panic(err)
 		}
-		//   mangaID = chapter.id.match(/chapter\/(\d+)/)[1];
 		strMangaID := regexp.MustCompile(`chapter\/(\d+)`).FindStringSubmatch(b.url)[1]
 		mangaID, err = strconv.Atoi(strMangaID)
 		if err != nil {
@@ -119,33 +114,8 @@ func (b *Book) Pages() []site.Page {
 		// }
 	}
 
-	// return Array(pageCount + 1)
-	//   .fill()
-	//   .map((_, index) => {
-	//     let page = new URL("/manga/get_manga_url", this.url);
-	//     page.searchParams.set("device_id", 3);
-	//     page.searchParams.set("manga_id", mangaID);
-	//     page.searchParams.set("page", index);
-	//     return this.createConnectorURI({ id: page.href, referer: chapter.id });
-	//   });
 	pages := []site.Page{}
 	for i := 1; i < pageCount; i++ {
-		// responseData, err := get(uri, fmt.Sprintf("https://www.viz.com/manga/get_manga_url?device_id=3&manga_id=%d&page=%d", mangaID, i))
-		// if err != nil {
-		// 	panic(err)
-		// }
-		// pageURI := string(responseData)
-		// pageData, err := get(uri, pageURI)
-		// if err != nil {
-		// 	panic(err)
-		// }
-
-		// err = ioutil.WriteFile("./test.png", pageData, 0644)
-		// if err != nil {
-		// 	panic(err)
-		// }
-
-		// os.Exit(1)
 
 		pages = append(pages, &Page{
 			url: fmt.Sprintf("https://www.viz.com/manga/get_manga_url?device_id=3&manga_id=%d&page=%d", mangaID, i),
@@ -156,7 +126,46 @@ func (b *Book) Pages() []site.Page {
 	return pages
 }
 
+func login(uri, csrfToken string) error {
+	user := viper.GetString("mangadex.username")
+	pass := viper.GetString("mangadex.password")
+
+	if user == "" || pass == "" {
+		return nil
+	}
+
+	b, err := postString(
+		uri,
+		"https://www.viz.com/account/try_login",
+		fmt.Sprintf(
+			"login=%s&pass=%s&uid=0&rem_user=1",
+			url.QueryEscape(user),
+			url.QueryEscape(pass),
+		),
+		csrfToken,
+	)
+
+	fmt.Printf("%s\n", b)
+	os.Exit(1)
+
+	return err
+}
+
 func get(referer, uri string) ([]byte, error) {
+	return request(referer, "GET", uri, nil, "")
+}
+
+func postString(referer, uri, body, csrfToken string) ([]byte, error) {
+	return request(
+		referer,
+		"GET",
+		uri,
+		[]byte(body),
+		csrfToken,
+	)
+}
+
+func request(referer, method, uri string, body []byte, csrfToken string) ([]byte, error) {
 	time.Sleep(time.Millisecond * 100)
 	if client == nil {
 		jar, err := cookiejar.New(nil)
@@ -166,32 +175,43 @@ func get(referer, uri string) ([]byte, error) {
 		u, _ := url.Parse(referer)
 
 		cs := jar.Cookies(u)
-		cs = append(cs, &http.Cookie{
-			Name:   "user_visits",
-			Value:  "1",
-			MaxAge: 300,
-			Path:   "/",
-		}, &http.Cookie{
-			Name:   "user_visits_url",
-			Value:  u.Path,
-			MaxAge: 300,
-			Path:   "/",
-		})
+		cs = append(
+			cs,
+			&http.Cookie{
+				Name:   "user_visits",
+				Value:  "1",
+				MaxAge: 300,
+				Path:   "/",
+			},
+			&http.Cookie{
+				Name:   "user_visits_url",
+				Value:  u.Path,
+				MaxAge: 300,
+				Path:   "/",
+			},
+		)
+
 		jar.SetCookies(u, cs)
 		client = &http.Client{
 			Jar: jar,
 		}
 	}
 
-	req, err := http.NewRequest("GET", uri, nil)
+	req, err := http.NewRequest(method, uri, bytes.NewBuffer(body))
 	if err != nil {
 		return nil, err
 	}
 
 	req.Header.Add("User-Agent", "Mozilla/5.0 (X11; Linux x86_64; rv:93.0) Gecko/20100101 Firefox/93.0")
-	req.Header.Add("Accept", "text/html, */*; q=0.01")
+	switch strings.ToUpper(method) {
+	case "GET":
+		req.Header.Add("Accept", "text/html, */*; q=0.01")
+	case "POST":
+		req.Header.Add("Accept", "application/json, text/javascript, */*; q=0.01")
+	}
 	req.Header.Add("Accept-Language", "en-US,en;q=0.5' --compresse")
 	req.Header.Add("Referer", referer)
+	req.Header.Add("Origin", "https://viz.com")
 	req.Header.Add("X-client-login", "false")
 	req.Header.Add("X-Requested-With", "XMLHttpRequest")
 	req.Header.Add("DNT", "1")
@@ -202,6 +222,51 @@ func get(referer, uri string) ([]byte, error) {
 	req.Header.Add("Pragma", "no-cache")
 	req.Header.Add("Cache-Control", "no-cache")
 	req.Header.Add("TE", "trailer")
+	if csrfToken != "" {
+		req.Header.Add("x-csrf-token", csrfToken)
+	}
+	if body != nil {
+		req.Header.Add("Content-Length", fmt.Sprint(len(body)))
+		req.Header.Add("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8")
+	}
+	spew.Dump(client.Jar)
+
+	// req.Header.Add("authority", "www.viz.com")
+	// req.Header.Add("accept", "application/json, text/javascript, */*; q=0.01")
+	// req.Header.Add("accept-language", "en-GB,en;q=0.9")
+	// req.Header.Add("cache-control", "no-cache")
+	// req.Header.Add("content-type", "application/x-www-form-urlencoded; charset=UTF-8")
+	// req.Header.Add("origin", "https://www.viz.com")
+	// req.Header.Add("pragma", "no-cache")
+	// req.Header.Add("referer", "https://www.viz.com/shonenjump")
+	// req.Header.Add("sec-ch-ua", `" Not A;Brand";v="99", "Chromium";v="100"`)
+	// req.Header.Add("sec-ch-ua-mobile", "?0")
+	// req.Header.Add("sec-ch-ua-platform", `"Linux"`)
+	// req.Header.Add("sec-fetch-dest", "empty")
+	// req.Header.Add("sec-fetch-mode", "cors")
+	// req.Header.Add("sec-fetch-site", "same-origin")
+	// req.Header.Add("user-agent", "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/100.0.4896.127 Safari/537.36")
+	// req.Header.Add("x-client-login", "false")
+	// req.Header.Add("x-requested-with", "XMLHttpRequest")
+
+	// req.Header.Add("accept", "application/json, text/javascript, */*; q=0.01")
+	// req.Header.Add("accept-encoding", "gzip, deflate, br")
+	// req.Header.Add("accept-language", "en-GB,en-US;q=0.9,en;q=0.8")
+	// req.Header.Add("cache-control", "no-cache")
+	// req.Header.Add("content-length", "63")
+	// req.Header.Add("content-type", "application/x-www-form-urlencoded; charset=UTF-8")
+	// req.Header.Add("origin", "https://www.viz.com")
+	// req.Header.Add("pragma", "no-cache")
+	// req.Header.Add("referer", "https://www.viz.com/")
+	// req.Header.Add("sec-ch-ua", `" Not A;Brand";v="99", "Chromium";v="100"`)
+	// req.Header.Add("sec-ch-ua-mobile", "?0")
+	// req.Header.Add("sec-ch-ua-platform", `"Linux"`)
+	// req.Header.Add("sec-fetch-dest", "empty")
+	// req.Header.Add("sec-fetch-mode", "cors")
+	// req.Header.Add("sec-fetch-site", "same-origin")
+	// req.Header.Add("user-agent", "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/100.0.4896.127 Safari/537.36")
+	// req.Header.Add("x-client-login", "false")
+	// req.Header.Add("x-requested-with", "XMLHttpRequest")
 
 	resp, err := client.Do(req)
 	if err != nil {
