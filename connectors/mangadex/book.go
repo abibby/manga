@@ -1,6 +1,7 @@
 package mangadex
 
 import (
+	"fmt"
 	"strconv"
 
 	"github.com/abibby/manga/site"
@@ -47,6 +48,9 @@ func (b *Book) Series() string {
 		return t
 	}
 	return ""
+}
+func (b *Book) SeriesID() string {
+	return fmt.Sprintf("mangadex:%s", b.mdChapter.Manga().ID)
 }
 func (b *Book) Chapter() float64 {
 	chapter, _ := strconv.ParseFloat(b.mdChapter.Chapter.String(), 64)

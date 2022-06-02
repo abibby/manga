@@ -2,3 +2,4 @@ config.yml
 .vscode
 manga
 md-token.json
+db.db
