@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"net/url"
 	"os"
@@ -75,6 +76,8 @@ type Book interface {
 	ID() string
 	// Series is the name of the series the chapter belongs to
 	Series() string
+	// Series is the name of the series the chapter belongs to
+	SeriesID() string
 	// Chapter is the number of the chapter
 	Chapter() float64
 	// Volume is the volume number of the chapter
@@ -98,33 +101,33 @@ func RegisterMangaSite(site MangaSite) {
 }
 
 // Download downloads all books from a given URL with chapter >= fromChapter
-func Download(url string, fromChapter int64) error {
+func Download(db *DB, url string, fromChapter int64) error {
 
 	for _, site := range magnaSites {
 		if site.Test(url) {
-			return download(site, url, fromChapter)
+			return download(db, site, url, fromChapter)
 		}
 	}
 	return fmt.Errorf("no site that matches %s", url)
 }
 
-func download(site MangaSite, url string, fromChapter int64) error {
+func download(db *DB, site MangaSite, url string, fromChapter int64) error {
 	books, err := site.Books(url)
 	if err != nil {
 		return err
 	}
 	sort.Slice(books, func(i, j int) bool {
-		return folder(books[i]) < folder(books[j])
+		return folder(db, books[i]) < folder(db, books[j])
 	})
 	for _, book := range books {
 		if book.Chapter() < float64(fromChapter) {
 			continue
 		}
-		if _, err := os.Stat(folder(book) + ".cbz"); err == nil {
+		if _, err := os.Stat(folder(db, book) + ".cbz"); err == nil {
 			continue
 		}
-		fmt.Printf("Downloading %s\n", name(book))
-		err := downloadBook(site, book)
+		fmt.Printf("Downloading %s\n", name(db, book))
+		err := downloadBook(db, site, book)
 		if err != nil {
 			fmt.Println(err)
 		}
@@ -132,14 +135,23 @@ func download(site MangaSite, url string, fromChapter int64) error {
 	return nil
 }
 
-func seriesFolder(book Book) string {
+func bookSeries(db *DB, book Book) string {
+	s, err := db.SeriesName(book)
+	if err != nil {
+		log.Print(err)
+		return book.Series()
+	}
+	return s
+}
+
+func seriesFolder(db *DB, book Book) string {
 	path := viper.GetString("dir")
-	folder := fp.Join(path, book.Series())
+	folder := fp.Join(path, bookSeries(db, book))
 	return folder
 }
 
-func name(book Book) string {
-	name := book.Series()
+func name(db *DB, book Book) string {
+	name := bookSeries(db, book)
 	if book.Volume() != 0 {
 		name += fmt.Sprintf(" V%d", book.Volume())
 	}
@@ -151,18 +163,18 @@ func name(book Book) string {
 	}
 	return name
 }
-func folder(book Book) string {
-	folder := fp.Join(seriesFolder(book), name(book))
+func folder(db *DB, book Book) string {
+	folder := fp.Join(seriesFolder(db, book), name(db, book))
 	return folder
 }
 
-func chapterExists(book Book) bool {
-	_, err := os.Stat(folder(book) + ".cbz")
+func chapterExists(db *DB, book Book) bool {
+	_, err := os.Stat(folder(db, book) + ".cbz")
 	return err == nil
 }
 
-func downloadBook(site MangaSite, book Book) error {
-	folder := folder(book)
+func downloadBook(db *DB, site MangaSite, book Book) error {
+	folder := folder(db, book)
 	err := os.MkdirAll(folder, 0777)
 	if err != nil {
 		return err

@@ -25,9 +25,10 @@ import (
 var client *http.Client
 
 type Book struct {
-	url     string
-	series  string
-	chapter float64
+	url      string
+	series   string
+	seriesID string
+	chapter  float64
 }
 
 var _ site.Book = &Book{}
@@ -52,14 +53,20 @@ func books(uri string) ([]site.Book, error) {
 	}
 	seriesTitle := d.Find("h2.type-lg")
 
+	seriesID := seriesTitle.Text()
+	matches := regexp.MustCompile(`^https:\/\/www.viz.com\/shonenjump\/chapters\/([^/]+)`).FindStringSubmatch(uri)
+	if len(matches) > 2 {
+		seriesID = matches[1]
+	}
 	bs := []site.Book{}
 
 	for cURL, number := range chapterURLs {
 		f, _ := strconv.ParseFloat(number, 64)
 		bs = append(bs, &Book{
-			url:     cURL,
-			series:  seriesTitle.Text(),
-			chapter: f,
+			url:      cURL,
+			series:   seriesTitle.Text(),
+			seriesID: seriesID,
+			chapter:  f,
 		})
 	}
 
@@ -222,6 +229,9 @@ func (b *Book) ID() string {
 }
 func (b *Book) Series() string {
 	return b.series
+}
+func (b *Book) SeriesID() string {
+	return fmt.Sprintf("viz:%s", b.seriesID)
 }
 func (b *Book) Chapter() float64 {
 	return b.chapter

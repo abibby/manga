@@ -44,6 +44,9 @@ func (b *Book) ID() string {
 func (b *Book) Series() string {
 	return b.series.Name
 }
+func (b *Book) SeriesID() string {
+	return b.Series()
+}
 func (b *Book) Chapter() float64 {
 	return b.seriesChapter.Chapter()
 }

@@ -84,6 +84,9 @@ func (b *Book) ID() string {
 func (b *Book) Series() string {
 	return b.title.GetTitle().GetName()
 }
+func (b *Book) SeriesID() string {
+	return fmt.Sprintf("mangaplus:%d", b.title.Title.TitleId)
+}
 func (b *Book) Chapter() float64 {
 	ch, err := strconv.ParseFloat(b.chapter.GetName()[1:], 64)
 	if err != nil {

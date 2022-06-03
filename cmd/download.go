@@ -22,6 +22,7 @@ import (
 
 	"github.com/abibby/manga/site"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 
 	// Connectors
 	// _ "github.com/abibby/manga/connectors/crunchyroll"
@@ -50,7 +51,15 @@ Currently the installed connectors are %s.`, strings.Join(site.ConnectorNames(),
 				return err
 			}
 
-			err = site.Download(url, from)
+			path := viper.GetString("database")
+
+			db, err := site.OpenDB(path)
+			if err != nil {
+				return err
+			}
+			defer db.Close()
+
+			err = site.Download(db, url, from)
 			if err != nil {
 				fmt.Fprintf(os.Stderr, "There was an error downloading %s: %+v", url, err)
 			}
