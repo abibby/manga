@@ -14,8 +14,7 @@ require (
 	github.com/spf13/viper v1.6.1
 	go.etcd.io/bbolt v1.3.6
 	golang.org/x/image v0.0.0-20211028202545-6944b10bf410
-	golang.org/x/sys v0.0.0-20211007075335-d3039528d8ac // indirect
-	golang.org/x/text v0.3.6
+	golang.org/x/text v0.3.8
 	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1 // indirect
 	google.golang.org/protobuf v1.27.1 // indirect
 )
