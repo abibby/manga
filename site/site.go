@@ -200,7 +200,9 @@ func downloadBook(db *DB, site MangaSite, book Book) error {
 			return err
 		}
 	}
-	b, err := json.MarshalIndent(book.Info(), "", "    ")
+	info := book.Info()
+	info.Series = bookSeries(db, book)
+	b, err := json.MarshalIndent(info, "", "    ")
 	if err != nil {
 		return err
 	}
