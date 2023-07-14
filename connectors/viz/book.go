@@ -8,6 +8,7 @@ import (
 	"image/png"
 	"io"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"net/http/cookiejar"
 	"net/url"
@@ -123,7 +124,24 @@ func (b *Book) Pages() []site.Page {
 		if err != nil {
 			panic(err)
 		}
-		// }
+	} else if strings.HasPrefix(b.url, "/vizmanga") {
+		bPageCount := regexp.MustCompile(`var\s+pages\s*=\s*(\d+)`).FindSubmatch(responseData)[1]
+		pageCount, err = strconv.Atoi(string(bPageCount))
+		if err != nil {
+			panic(err)
+		}
+
+		u, err := url.Parse(b.url)
+		if err != nil {
+			panic(err)
+		}
+		strMangaID := filepath.Base(u.Path)
+		mangaID, err = strconv.Atoi(strMangaID)
+		if err != nil {
+			panic(err)
+		}
+	} else {
+		log.Printf("unsupported chapter url %s", b.url)
 	}
 
 	// return Array(pageCount + 1)
