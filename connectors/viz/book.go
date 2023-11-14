@@ -8,8 +8,6 @@ import (
 	"image/png"
 	"io"
 	"io/ioutil"
-	"net/http"
-	"net/http/cookiejar"
 	"net/url"
 	"os"
 	"path/filepath"
@@ -19,13 +17,13 @@ import (
 	"time"
 
 	"github.com/PuerkitoBio/goquery"
+	"github.com/abibby/manga/connectors/viz/vizrod"
 	"github.com/abibby/manga/site"
-	"github.com/davecgh/go-spew/spew"
 	"github.com/rwcarlsen/goexif/exif"
 	"github.com/spf13/viper"
 )
 
-var client *http.Client
+var client *vizrod.Viz
 
 type Book struct {
 	url     string
@@ -168,116 +166,17 @@ func postString(referer, uri, body, csrfToken string) ([]byte, error) {
 func request(referer, method, uri string, body []byte, csrfToken string) ([]byte, error) {
 	time.Sleep(time.Millisecond * 100)
 	if client == nil {
-		jar, err := cookiejar.New(nil)
+		var err error
+		client, err = vizrod.New()
 		if err != nil {
 			return nil, err
 		}
-		u, _ := url.Parse(referer)
-
-		cs := jar.Cookies(u)
-		cs = append(
-			cs,
-			&http.Cookie{
-				Name:   "user_visits",
-				Value:  "1",
-				MaxAge: 300,
-				Path:   "/",
-			},
-			&http.Cookie{
-				Name:   "user_visits_url",
-				Value:  u.Path,
-				MaxAge: 300,
-				Path:   "/",
-			},
-		)
-
-		jar.SetCookies(u, cs)
-		client = &http.Client{
-			Jar: jar,
+		err = client.Login(viper.GetString("viz.username"), viper.GetString("viz.password"))
+		if err != nil {
+			return nil, err
 		}
 	}
-
-	req, err := http.NewRequest(method, uri, bytes.NewBuffer(body))
-	if err != nil {
-		return nil, err
-	}
-
-	req.Header.Add("User-Agent", "Mozilla/5.0 (X11; Linux x86_64; rv:93.0) Gecko/20100101 Firefox/93.0")
-	switch strings.ToUpper(method) {
-	case "GET":
-		req.Header.Add("Accept", "text/html, */*; q=0.01")
-	case "POST":
-		req.Header.Add("Accept", "application/json, text/javascript, */*; q=0.01")
-	}
-	req.Header.Add("Accept-Language", "en-US,en;q=0.5' --compresse")
-	req.Header.Add("Referer", referer)
-	req.Header.Add("Origin", "https://viz.com")
-	req.Header.Add("X-client-login", "false")
-	req.Header.Add("X-Requested-With", "XMLHttpRequest")
-	req.Header.Add("DNT", "1")
-	req.Header.Add("Connection", "keep-alive")
-	req.Header.Add("Sec-Fetch-Dest", "empty")
-	req.Header.Add("Sec-Fetch-Mode", "cors")
-	req.Header.Add("Sec-Fetch-Site", "same-origin")
-	req.Header.Add("Pragma", "no-cache")
-	req.Header.Add("Cache-Control", "no-cache")
-	req.Header.Add("TE", "trailer")
-	if csrfToken != "" {
-		req.Header.Add("x-csrf-token", csrfToken)
-	}
-	if body != nil {
-		req.Header.Add("Content-Length", fmt.Sprint(len(body)))
-		req.Header.Add("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8")
-	}
-	spew.Dump(client.Jar)
-
-	// req.Header.Add("authority", "www.viz.com")
-	// req.Header.Add("accept", "application/json, text/javascript, */*; q=0.01")
-	// req.Header.Add("accept-language", "en-GB,en;q=0.9")
-	// req.Header.Add("cache-control", "no-cache")
-	// req.Header.Add("content-type", "application/x-www-form-urlencoded; charset=UTF-8")
-	// req.Header.Add("origin", "https://www.viz.com")
-	// req.Header.Add("pragma", "no-cache")
-	// req.Header.Add("referer", "https://www.viz.com/shonenjump")
-	// req.Header.Add("sec-ch-ua", `" Not A;Brand";v="99", "Chromium";v="100"`)
-	// req.Header.Add("sec-ch-ua-mobile", "?0")
-	// req.Header.Add("sec-ch-ua-platform", `"Linux"`)
-	// req.Header.Add("sec-fetch-dest", "empty")
-	// req.Header.Add("sec-fetch-mode", "cors")
-	// req.Header.Add("sec-fetch-site", "same-origin")
-	// req.Header.Add("user-agent", "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/100.0.4896.127 Safari/537.36")
-	// req.Header.Add("x-client-login", "false")
-	// req.Header.Add("x-requested-with", "XMLHttpRequest")
-
-	// req.Header.Add("accept", "application/json, text/javascript, */*; q=0.01")
-	// req.Header.Add("accept-encoding", "gzip, deflate, br")
-	// req.Header.Add("accept-language", "en-GB,en-US;q=0.9,en;q=0.8")
-	// req.Header.Add("cache-control", "no-cache")
-	// req.Header.Add("content-length", "63")
-	// req.Header.Add("content-type", "application/x-www-form-urlencoded; charset=UTF-8")
-	// req.Header.Add("origin", "https://www.viz.com")
-	// req.Header.Add("pragma", "no-cache")
-	// req.Header.Add("referer", "https://www.viz.com/")
-	// req.Header.Add("sec-ch-ua", `" Not A;Brand";v="99", "Chromium";v="100"`)
-	// req.Header.Add("sec-ch-ua-mobile", "?0")
-	// req.Header.Add("sec-ch-ua-platform", `"Linux"`)
-	// req.Header.Add("sec-fetch-dest", "empty")
-	// req.Header.Add("sec-fetch-mode", "cors")
-	// req.Header.Add("sec-fetch-site", "same-origin")
-	// req.Header.Add("user-agent", "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/100.0.4896.127 Safari/537.36")
-	// req.Header.Add("x-client-login", "false")
-	// req.Header.Add("x-requested-with", "XMLHttpRequest")
-
-	resp, err := client.Do(req)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-	b, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return nil, err
-	}
-	return b, nil
+	html, err := client.GetHTML(uri)
 }
 
 func (b *Book) ID() string {
