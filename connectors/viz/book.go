@@ -284,32 +284,32 @@ func (p *Page) URL() (string, error) {
 	return string(pageURI), nil
 }
 
-func (p *Page) ImageDecrypt(encrypted io.Reader) (io.Reader, string) {
+func (p *Page) ImageDecrypt(encrypted io.Reader) io.Reader {
 	srcBytes, err := ioutil.ReadAll(encrypted)
 	if err != nil {
-		return site.NewErrorReader(err), ""
+		return site.NewErrorReader(err)
 	}
 	if err != nil {
-		return site.NewErrorReader(err), ""
+		return site.NewErrorReader(err)
 	}
 
 	x, err := exif.Decode(bytes.NewReader(srcBytes))
 	if err != nil {
-		return site.NewErrorReader(err), ""
+		return site.NewErrorReader(err)
 	}
 
 	src, err := jpeg.Decode(bytes.NewReader(srcBytes))
 	if err != nil {
-		return site.NewErrorReader(err), ""
+		return site.NewErrorReader(err)
 	}
 
 	imgWidth, err := getInt(x, "ImageWidth")
 	if err != nil {
-		return site.NewErrorReader(err), ""
+		return site.NewErrorReader(err)
 	}
 	imgHeight, err := getInt(x, "ImageLength")
 	if err != nil {
-		return site.NewErrorReader(err), ""
+		return site.NewErrorReader(err)
 	}
 	dest := image.NewRGBA(image.Rect(0, 0, imgWidth, imgHeight))
 
@@ -342,18 +342,18 @@ func (p *Page) ImageDecrypt(encrypted io.Reader) (io.Reader, string) {
 
 	imageUniqueID, err := x.Get("ImageUniqueID")
 	if err != nil {
-		return site.NewErrorReader(err), ""
+		return site.NewErrorReader(err)
 	}
 	id, err := imageUniqueID.StringVal()
 	if err != nil {
-		return site.NewErrorReader(err), ""
+		return site.NewErrorReader(err)
 	}
 
 	shuffleMap := strings.Split(id, ":")
 	for piece := 0; piece < len(shuffleMap); piece++ {
 		shuffleMapPiece, err := strconv.ParseInt(shuffleMap[piece], 16, 64)
 		if err != nil {
-			return site.NewErrorReader(err), ""
+			return site.NewErrorReader(err)
 		}
 		copyRect(
 			src, dest,
@@ -366,9 +366,9 @@ func (p *Page) ImageDecrypt(encrypted io.Reader) (io.Reader, string) {
 	buff := &bytes.Buffer{}
 	err = png.Encode(buff, dest)
 	if err != nil {
-		return site.NewErrorReader(err), ""
+		return site.NewErrorReader(err)
 	}
-	return buff, "png"
+	return buff
 }
 
 func copyRect(src image.Image, dest *image.RGBA, srcX, srcY, destX, destY, w, h int) {

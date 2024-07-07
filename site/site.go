@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"net/url"
@@ -15,6 +14,12 @@ import (
 
 	"github.com/spf13/viper"
 )
+
+type Source struct {
+	Name string
+	URL  string
+	From float64
+}
 
 // MangaSite is an interface that represents a location to download manga
 type MangaSite interface {
@@ -28,7 +33,7 @@ type MangaSite interface {
 }
 
 type ImageDecrypter interface {
-	ImageDecrypt(io.Reader) (io.Reader, string)
+	ImageDecrypt(io.Reader) io.Reader
 }
 
 type ErrorReader struct{ err error }
@@ -101,33 +106,33 @@ func RegisterMangaSite(site MangaSite) {
 }
 
 // Download downloads all books from a given URL with chapter >= fromChapter
-func Download(db *DB, url string, fromChapter int64) error {
+func Download(db *DB, s *Source) error {
 
 	for _, site := range magnaSites {
-		if site.Test(url) {
-			return download(db, site, url, fromChapter)
+		if site.Test(s.URL) {
+			return download(db, site, s)
 		}
 	}
-	return fmt.Errorf("no site that matches %s", url)
+	return fmt.Errorf("no site that matches %s", s.URL)
 }
 
-func download(db *DB, site MangaSite, url string, fromChapter int64) error {
-	books, err := site.Books(url)
+func download(db *DB, site MangaSite, s *Source) error {
+	books, err := site.Books(s.URL)
 	if err != nil {
 		return err
 	}
 	sort.Slice(books, func(i, j int) bool {
-		return folder(db, books[i]) < folder(db, books[j])
+		return folder(db, s, books[i]) < folder(db, s, books[j])
 	})
 	for _, book := range books {
-		if book.Chapter() < float64(fromChapter) {
+		if book.Chapter() < s.From {
 			continue
 		}
-		if _, err := os.Stat(folder(db, book) + ".cbz"); err == nil {
+		if _, err := os.Stat(folder(db, s, book) + ".cbz"); err == nil {
 			continue
 		}
-		fmt.Printf("Downloading %s\n", name(db, book))
-		err := downloadBook(db, site, book)
+		fmt.Printf("Downloading %s\n", name(db, s, book))
+		err := downloadBook(db, site, s, book)
 		if err != nil {
 			fmt.Println(err)
 		}
@@ -135,23 +140,26 @@ func download(db *DB, site MangaSite, url string, fromChapter int64) error {
 	return nil
 }
 
-func bookSeries(db *DB, book Book) string {
-	s, err := db.SeriesName(book)
+func bookSeries(db *DB, s *Source, book Book) string {
+	if s.Name != "" {
+		return s.Name
+	}
+	name, err := db.SeriesName(book)
 	if err != nil {
 		log.Print(err)
 		return book.Series()
 	}
-	return s
+	return name
 }
 
-func seriesFolder(db *DB, book Book) string {
+func seriesFolder(db *DB, s *Source, book Book) string {
 	path := viper.GetString("dir")
-	folder := fp.Join(path, bookSeries(db, book))
+	folder := fp.Join(path, bookSeries(db, s, book))
 	return folder
 }
 
-func name(db *DB, book Book) string {
-	name := bookSeries(db, book)
+func name(db *DB, s *Source, book Book) string {
+	name := bookSeries(db, s, book)
 	if book.Volume() != 0 {
 		name += fmt.Sprintf(" V%d", book.Volume())
 	}
@@ -163,18 +171,18 @@ func name(db *DB, book Book) string {
 	}
 	return name
 }
-func folder(db *DB, book Book) string {
-	folder := fp.Join(seriesFolder(db, book), name(db, book))
+func folder(db *DB, s *Source, book Book) string {
+	folder := fp.Join(seriesFolder(db, s, book), name(db, s, book))
 	return folder
 }
 
-func chapterExists(db *DB, book Book) bool {
-	_, err := os.Stat(folder(db, book) + ".cbz")
+func chapterExists(db *DB, s *Source, book Book) bool {
+	_, err := os.Stat(folder(db, s, book) + ".cbz")
 	return err == nil
 }
 
-func downloadBook(db *DB, site MangaSite, book Book) error {
-	folder := folder(db, book)
+func downloadBook(db *DB, site MangaSite, s *Source, book Book) error {
+	folder := folder(db, s, book)
 	err := os.MkdirAll(folder, 0777)
 	if err != nil {
 		return err
@@ -201,12 +209,12 @@ func downloadBook(db *DB, site MangaSite, book Book) error {
 		}
 	}
 	info := book.Info()
-	info.Series = bookSeries(db, book)
+	info.Series = bookSeries(db, s, book)
 	b, err := json.MarshalIndent(info, "", "    ")
 	if err != nil {
 		return err
 	}
-	ioutil.WriteFile(fp.Join(folder, "book.json"), b, 0777)
+	os.WriteFile(fp.Join(folder, "book.json"), b, 0777)
 	file := folder + ".cbz"
 
 	err = zipit(folder, file)
