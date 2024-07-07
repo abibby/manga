@@ -42,26 +42,39 @@ var downloadCmd = &cobra.Command{
 Manga can download from any site that has a connector setup.
 Currently the installed connectors are %s.`, strings.Join(site.ConnectorNames(), ", ")),
 	RunE: func(cmd *cobra.Command, args []string) error {
-		for _, url := range args {
-
-			fmt.Printf("download %s\n", url)
-
-			from, err := strconv.ParseInt(cmd.Flag("from").Value.String(), 10, 64)
+		sources := []*site.Source{}
+		if len(args) == 0 {
+			err := viper.UnmarshalKey("sources", &sources)
 			if err != nil {
 				return err
 			}
-
-			path := viper.GetString("database")
-
-			db, err := site.OpenDB(path)
+		} else {
+			from, err := strconv.ParseFloat(cmd.Flag("from").Value.String(), 64)
 			if err != nil {
 				return err
 			}
-			defer db.Close()
+			for _, url := range args {
+				sources = append(sources, &site.Source{
+					URL:  url,
+					From: from,
+				})
+			}
+		}
 
-			err = site.Download(db, url, from)
+		path := viper.GetString("database")
+
+		db, err := site.OpenDB(path)
+		if err != nil {
+			return err
+		}
+		defer db.Close()
+
+		for _, s := range sources {
+			fmt.Printf("download %s\n", s.URL)
+
+			err = site.Download(db, s)
 			if err != nil {
-				fmt.Fprintf(os.Stderr, "There was an error downloading %s: %+v", url, err)
+				fmt.Fprintf(os.Stderr, "There was an error downloading %s: %+v", s.URL, err)
 			}
 		}
 		return nil

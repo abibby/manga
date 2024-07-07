@@ -30,31 +30,29 @@ func saveImage(site MangaSite, page Page, path string) error {
 
 	defer response.Body.Close()
 
-	body := io.Reader(response.Body)
+	var body io.Reader = response.Body
 
 	if decoder, ok := page.(ImageDecrypter); ok {
-		ext := ""
-		body, ext = decoder.ImageDecrypt(body)
-		path = path + "." + ext
+		body = decoder.ImageDecrypt(body)
 	}
 
-	//open a file for writing
-	file, err := os.Create(path)
+	b, err := io.ReadAll(body)
 	if err != nil {
 		return err
 	}
-	defer file.Close()
 
-	buff := &bytes.Buffer{}
-
-	_, _, err = image.Decode(io.TeeReader(body, buff))
+	_, imgTyp, err := image.Decode(bytes.NewBuffer(b))
 	if err != nil {
 		return fmt.Errorf("could not decode image '%s': %v", uri, err)
 	}
 
-	_, err = io.Copy(file, buff)
+	ext := "." + imgTyp
 
-	return err
+	if !strings.HasSuffix(path, ext) {
+		path += ext
+	}
+
+	return os.WriteFile(path, b, 0644)
 }
 
 // from http://blog.ralch.com/tutorial/golang-working-with-zip/

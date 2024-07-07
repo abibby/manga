@@ -68,12 +68,12 @@ func (b *Book) Info() *site.BookInfo {
 func (p *Page) URL() (string, error) {
 	return p.ImageURL, nil
 }
-func (m *Page) ImageDecrypt(encrypted io.Reader) (io.Reader, string) {
+func (m *Page) ImageDecrypt(encrypted io.Reader) io.Reader {
 	const key = 0x65
 
 	b, err := ioutil.ReadAll(encrypted)
 	if err != nil {
-		return site.NewErrorReader(err), "webp"
+		return site.NewErrorReader(err)
 	}
 	decrypted := make([]byte, 0, len(b)+15)
 	n := make([]byte, 4)
@@ -85,5 +85,5 @@ func (m *Page) ImageDecrypt(encrypted io.Reader) (io.Reader, string) {
 		decrypted = append(decrypted, key^c)
 	}
 
-	return bytes.NewReader(decrypted), "webp"
+	return bytes.NewReader(decrypted)
 }

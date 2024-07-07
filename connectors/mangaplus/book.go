@@ -5,8 +5,6 @@ import (
 	"encoding/hex"
 	"fmt"
 	"io"
-	"io/ioutil"
-	"net/http"
 	"net/url"
 	"strconv"
 	"strings"
@@ -34,25 +32,27 @@ func books(uri string) ([]site.Book, error) {
 	}
 	id := parts[1]
 
-	result, err := mpproto.Get("https://jumpg-webapi.tokyo-cdn.com/api/title_detail?title_id=%s", id)
+	result, err := mpproto.Get("https://jumpg-webapi.tokyo-cdn.com/api/title_detailV3?title_id=%s", id)
 	if err != nil {
 		panic(err)
 	}
 
-	bs := []site.Book{}
-	for _, ch := range result.GetTitleDetailView().GetFirstChapterList() {
-		bs = append(bs, &Book{
-			title:   result.GetTitleDetailView(),
-			chapter: ch,
-		})
+	siteBooks := []site.Book{}
+	for _, chapterList := range result.GetTitleDetailView().GetChapterList() {
+		for _, ch := range chapterList.GetFirstChapters() {
+			siteBooks = append(siteBooks, &Book{
+				title:   result.GetTitleDetailView(),
+				chapter: ch,
+			})
+		}
+		for _, ch := range chapterList.GetLastChapters() {
+			siteBooks = append(siteBooks, &Book{
+				title:   result.GetTitleDetailView(),
+				chapter: ch,
+			})
+		}
 	}
-	for _, ch := range result.GetTitleDetailView().GetLastChapterList() {
-		bs = append(bs, &Book{
-			title:   result.GetTitleDetailView(),
-			chapter: ch,
-		})
-	}
-	return bs, nil
+	return siteBooks, nil
 }
 
 func (b *Book) Pages() []site.Page {
@@ -63,9 +63,10 @@ func (b *Book) Pages() []site.Page {
 
 	pages := []site.Page{}
 	for _, page := range result.GetMangaViewer().GetPages() {
-		pageURL := page.GetMangaPage().GetImageUrl()
+		mp := page.GetMangaPage()
+		pageURL := mp.GetImageUrl()
 		if pageURL != "" {
-			encKey, err := hex.DecodeString(page.GetMangaPage().GetEncryptionKey())
+			encKey, err := hex.DecodeString(mp.GetEncryptionKey())
 			if err != nil {
 				panic(err)
 			}
@@ -116,53 +117,26 @@ type Page struct {
 	encryptionKey []byte
 }
 
-func getPages(id string) []Page {
-	r, err := http.Get(fmt.Sprintf("https://jumpg-webapi.tokyo-cdn.com/api/manga_viewer?chapter_id=%s&split=yes&img_quality=high", id))
-	if err != nil {
-		panic(err)
-	}
-	b, err := ioutil.ReadAll(r.Body)
-	if err != nil {
-		panic(err)
-	}
-
-	pages := []Page{}
-	lines := strings.Split(string(b), "\n")
-	for _, line := range lines {
-		if !strings.HasPrefix(line, "\x91\x01https://") {
-			continue
-		}
-		parts := strings.Split(line, "\x01")
-		encKey, err := hex.DecodeString(parts[2])
-		if err != nil {
-			panic(err)
-		}
-		pages = append(pages, Page{
-			url:           strings.TrimSuffix(parts[1], "\x10\x90\x06\x18\xf9\b*\x80"),
-			encryptionKey: encKey,
-		})
-	}
-	return pages
-}
-
 var _ site.Page = &Page{}
 var _ site.ImageDecrypter = &Page{}
 
 func (p *Page) URL() (string, error) {
 	return p.url, nil
 }
-func (p *Page) ImageDecrypt(encrypted io.Reader) (io.Reader, string) {
+func (p *Page) ImageDecrypt(encrypted io.Reader) io.Reader {
+	keyLen := len(p.encryptionKey)
+	if keyLen == 0 {
+		return encrypted
+	}
 
-	o, err := ioutil.ReadAll(encrypted)
+	encryptedImage, err := io.ReadAll(encrypted)
 	if err != nil {
-		panic(err)
+		return site.NewErrorReader(err)
 	}
 
-	a := len(p.encryptionKey)
-
-	for s := 0; s < len(o); s++ {
-		o[s] ^= p.encryptionKey[s%a]
+	for s := 0; s < len(encryptedImage); s++ {
+		encryptedImage[s] ^= p.encryptionKey[s%keyLen]
 	}
 
-	return bytes.NewReader(o), "png"
+	return bytes.NewReader(encryptedImage)
 }
