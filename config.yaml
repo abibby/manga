@@ -1,2 +1,5 @@
 database: ./db.db
 dir: ./manga
+series:
+  - name: One Piece
+    url: https://mangaplus.shueisha.co.jp/titles/100020
