@@ -34,25 +34,27 @@ func books(uri string) ([]site.Book, error) {
 	}
 	id := parts[1]
 
-	result, err := mpproto.Get("https://jumpg-webapi.tokyo-cdn.com/api/title_detail?title_id=%s", id)
+	result, err := mpproto.Get("https://jumpg-webapi.tokyo-cdn.com/api/title_detailV3?title_id=%s", id)
 	if err != nil {
 		panic(err)
 	}
 
-	bs := []site.Book{}
-	for _, ch := range result.GetTitleDetailView().GetFirstChapterList() {
-		bs = append(bs, &Book{
-			title:   result.GetTitleDetailView(),
-			chapter: ch,
-		})
+	siteBooks := []site.Book{}
+	for _, chapterList := range result.GetTitleDetailView().GetChapterList() {
+		for _, ch := range chapterList.GetFirstChapters() {
+			siteBooks = append(siteBooks, &Book{
+				title:   result.GetTitleDetailView(),
+				chapter: ch,
+			})
+		}
+		for _, ch := range chapterList.GetLastChapters() {
+			siteBooks = append(siteBooks, &Book{
+				title:   result.GetTitleDetailView(),
+				chapter: ch,
+			})
+		}
 	}
-	for _, ch := range result.GetTitleDetailView().GetLastChapterList() {
-		bs = append(bs, &Book{
-			title:   result.GetTitleDetailView(),
-			chapter: ch,
-		})
-	}
-	return bs, nil
+	return siteBooks, nil
 }
 
 func (b *Book) Pages() []site.Page {

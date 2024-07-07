@@ -1,5 +1,7 @@
 syntax = "proto3";
 
+option go_package="./mpproto";
+
 message Popup {
 	message AppDefault {
 		string image_url = 1;
@@ -43,6 +45,12 @@ message Sns {
 	string body = 1;
 	string url = 2;
 }
+message ChapterList {
+	string maybe_id = 1;
+	repeated Chapter first_chapters = 2;
+	repeated Chapter premium_chapters = 3;
+	repeated Chapter last_chapters = 4;
+}
 message Chapter {
 	uint32 title_id = 1;
 	uint32 chapter_id = 2;
@@ -52,7 +60,7 @@ message Chapter {
 	uint32 start_time_stamp = 6;
 	uint32 end_time_stamp = 7;
 	bool already_viewed = 8;
-	bool is_vertical_only = 9;
+	// bool is_vertical_only = 9;
 }
 message AdNetwork {
 	message Facebook { string placementID = 1; }
@@ -126,9 +134,9 @@ message Title {
 	string name = 2;
 	string author = 3;
 	string portait_image_url = 4;
-	string landscape_image_url = 5;
-	uint32 view_count = 6;
-	Language language = 7;
+	// string landscape_image_url = 5;
+	// uint32 view_count = 6;
+	// Language language = 7;
 }
 message TitleDetailView {
 	enum Rating {
@@ -151,21 +159,20 @@ message TitleDetailView {
 	Title title = 1;
 	string title_image_url = 2;
 	string overview = 3;
-	string background_image_url = 4;
+	// string background_image_url = 4;
 	uint32 next_time_stamp = 5;
-	UpdateTiming update_timing = 6;
+	// UpdateTiming update_timing = 6;
 	string viewing_period_description = 7;
-	string non_appearance_info = 8;
-	repeated Chapter first_chapter_list = 9;
-	repeated Chapter last_chapter_list = 10;
-	repeated Banner banners = 11;
-	repeated Title recommended_title_list = 12;
-	Sns sns = 13;
-	bool is_simul_released = 14;
-	bool is_subscribed = 15;
-	Rating rating = 16;
-	bool chapters_descending = 17;
-	uint32 number_of_views = 18;
+	// string non_appearance_info = 8;
+	repeated ChapterList chapter_list = 28;
+	// repeated Banner banners = 11;
+	// repeated Title recommended_title_list = 12;
+	// Sns sns = 13;
+	// bool is_simul_released = 14;
+	// bool is_subscribed = 15;
+	// Rating rating = 16;
+	// bool chapters_descending = 17;
+	// uint32 number_of_views = 18;
 }
 message UpdatedTitle {
 	Title title = 1;

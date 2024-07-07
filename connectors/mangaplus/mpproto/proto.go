@@ -8,7 +8,7 @@ import (
 	proto "google.golang.org/protobuf/proto"
 )
 
-//go:generate go run google.golang.org/protobuf/cmd/protoc-gen-go@latest go_out=. ../../../manga-plus-protobuf/web/manga_viewer/manga_viewer.proto
+//go:generate protoc --go_out=.. mpproto.proto
 
 func Get(path string, a ...interface{}) (*SuccessResult, error) {
 
