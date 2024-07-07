@@ -2,13 +2,13 @@ package mpproto
 
 import (
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 
-	proto "github.com/golang/protobuf/proto"
+	proto "google.golang.org/protobuf/proto"
 )
 
-//go:generate protoc --go_out=. mpproto.proto
+//go:generate go run google.golang.org/protobuf/cmd/protoc-gen-go@latest go_out=. ../../../manga-plus-protobuf/web/manga_viewer/manga_viewer.proto
 
 func Get(path string, a ...interface{}) (*SuccessResult, error) {
 
@@ -17,7 +17,7 @@ func Get(path string, a ...interface{}) (*SuccessResult, error) {
 		panic(err)
 	}
 	defer r.Body.Close()
-	b, err := ioutil.ReadAll(r.Body)
+	b, err := io.ReadAll(r.Body)
 	if err != nil {
 		panic(err)
 	}
