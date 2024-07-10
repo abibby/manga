@@ -1,7 +1,6 @@
 package mangaplus
 
 import (
-	"bytes"
 	"encoding/hex"
 	"fmt"
 	"io"
@@ -12,6 +11,7 @@ import (
 
 	"github.com/abibby/manga/connectors/mangaplus/mpproto"
 	"github.com/abibby/manga/site"
+	"github.com/abibby/manga/streams"
 )
 
 type Book struct {
@@ -128,15 +128,20 @@ func (p *Page) ImageDecrypt(encrypted io.Reader) io.Reader {
 	if keyLen == 0 {
 		return encrypted
 	}
-
-	encryptedImage, err := io.ReadAll(encrypted)
-	if err != nil {
-		return site.NewErrorReader(err)
-	}
-
-	for s := 0; s < len(encryptedImage); s++ {
-		encryptedImage[s] ^= p.encryptionKey[s%keyLen]
-	}
-
-	return bytes.NewReader(encryptedImage)
+	return streams.TransformerBuffer(encrypted, func(w io.Writer, r io.Reader) error {
+		b := make([]byte, keyLen)
+		for {
+			n, err := r.Read(b)
+			if err != nil {
+				return err
+			}
+			for i := 0; i < n; i++ {
+				b[i] ^= p.encryptionKey[i]
+			}
+			_, err = w.Write(b)
+			if err != nil {
+				return err
+			}
+		}
+	})
 }
