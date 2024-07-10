@@ -3,3 +3,4 @@ config.yml
 manga
 md-token.json
 db.db
+config.yaml
