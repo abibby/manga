@@ -6,6 +6,7 @@ import (
 	"image"
 	"io"
 	"log"
+	"log/slog"
 	"net/http"
 	"os"
 	"path"
@@ -172,9 +173,11 @@ func (d *sourceDownload) download() error {
 
 	for _, book := range books {
 		if book.Chapter() < d.source.From {
+			slog.Debug("chapter too early", "book", d.name(book), "from", d.source.From)
 			continue
 		}
-		if _, err := os.Stat(d.folder(book) + ".cbz"); err == nil {
+		if fileExists(d.folder(book) + ".cbz") {
+			slog.Debug("chapter already downloaded", "book", d.name(book))
 			continue
 		}
 		log.Printf("Downloading %s\n", d.name(book))
@@ -339,4 +342,9 @@ func (d *sourceDownload) downloadBook(book Book) error {
 	}
 
 	return nil
+}
+
+func fileExists(f string) bool {
+	_, err := os.Stat(f)
+	return err == nil
 }
