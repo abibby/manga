@@ -21,7 +21,6 @@ import (
 	"os"
 	"path"
 
-	"github.com/davecgh/go-spew/spew"
 	"github.com/lmittmann/tint"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
@@ -128,6 +127,4 @@ func initConfig() {
 	} else {
 		log.Printf("Using config file: %s", viper.ConfigFileUsed())
 	}
-	spew.Dump(viper.AllSettings())
-	os.Exit(1)
 }
