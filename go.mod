@@ -5,8 +5,7 @@ go 1.22
 require (
 	github.com/PuerkitoBio/goquery v1.9.2
 	github.com/abibby/mangadexv5 v0.5.0
-	github.com/abibby/salusa v0.12.0
-	github.com/mitchellh/go-homedir v1.1.0
+	github.com/lmittmann/tint v1.0.5
 	github.com/rwcarlsen/goexif v0.0.0-20190401172101-9e8deecbddbd
 	github.com/spf13/cobra v1.8.1
 	github.com/spf13/viper v1.19.0

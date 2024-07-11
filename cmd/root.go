@@ -21,6 +21,7 @@ import (
 	"os"
 	"path"
 
+	"github.com/lmittmann/tint"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -78,6 +79,19 @@ func init() {
 // initConfig reads in config file and ENV variables if set.
 func initConfig() {
 
+	level := slog.LevelInfo
+	if verbose {
+		level = slog.LevelDebug - 4
+	}
+
+	fi, err := os.Stdout.Stat()
+	isTTY := err == nil && (fi.Mode()&os.ModeCharDevice) != 0
+
+	slog.SetDefault(slog.New(tint.NewHandler(os.Stdout, &tint.Options{
+		Level:   level,
+		NoColor: !isTTY,
+	})))
+
 	if cfgFile != "" {
 		// Use config file from the flag.
 		viper.SetConfigFile(cfgFile)
@@ -101,13 +115,4 @@ func initConfig() {
 	if err := viper.ReadInConfig(); err == nil {
 		log.Println("Using config file:", viper.ConfigFileUsed())
 	}
-
-	level := slog.LevelInfo
-	if verbose {
-		level = slog.LevelDebug - 4
-	}
-
-	slog.SetDefault(slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
-		Level: level,
-	})))
 }
