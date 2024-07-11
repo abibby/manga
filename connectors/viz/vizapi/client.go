@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"log/slog"
 	"net/http"
 	"net/http/cookiejar"
 	"net/url"
@@ -69,6 +70,7 @@ func (c *Client) post(uri string, body io.Reader) (*http.Response, error) {
 }
 
 func (c *Client) doRequest(r *http.Request) (*http.Response, error) {
+	slog.Debug("viz fetch", "method", r.Method, "url", r.URL)
 	r.Header.Add("accept", "application/json, text/javascript, */*; q=0.01")
 	r.Header.Add("accept-language", "en-US,en;q=0.9,fr-CA;q=0.8,fr;q=0.7,en-CA;q=0.6")
 	r.Header.Add("cache-control", "no-cache")

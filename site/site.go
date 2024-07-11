@@ -177,10 +177,10 @@ func (d *sourceDownload) download() error {
 		if _, err := os.Stat(d.folder(book) + ".cbz"); err == nil {
 			continue
 		}
-		fmt.Printf("Downloading %s\n", d.name(book))
+		log.Printf("Downloading %s\n", d.name(book))
 		err := d.downloadBook(book)
 		if err != nil {
-			fmt.Println(err)
+			log.Println(err)
 		}
 	}
 	return nil

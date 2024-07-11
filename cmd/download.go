@@ -16,6 +16,7 @@ package cmd
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"strconv"
 	"strings"
@@ -72,7 +73,7 @@ Currently the installed connectors are %s.`, strings.Join(site.ConnectorNames(),
 		defer db.Close()
 
 		for _, s := range sources {
-			fmt.Printf("download %s\n", s.URL)
+			log.Printf("download %s\n", s.URL)
 
 			err = site.Download(db, mangaPath, s)
 			if err != nil {

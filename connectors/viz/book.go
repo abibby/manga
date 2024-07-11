@@ -8,7 +8,6 @@ import (
 	"image/jpeg"
 	"image/png"
 	"io"
-	"net/http"
 	"net/url"
 	"strconv"
 	"strings"
@@ -20,8 +19,6 @@ import (
 	"github.com/rwcarlsen/goexif/exif"
 	"github.com/spf13/viper"
 )
-
-var client *http.Client
 
 var newAPI = sync.OnceValues(func() (*vizapi.Client, error) {
 	return vizapi.New(
@@ -95,6 +92,7 @@ func (b *Book) Pages() ([]site.Page, error) {
 	pages := make([]site.Page, 0, pageCount)
 
 	chunkSize := 5
+	cover := true
 	for chunkStart := 0; chunkStart < pageCount; chunkStart += chunkSize {
 		getMangaURL := sync.OnceValues(func() (*vizapi.MangaURL, error) {
 			pageNumbers := make([]int, chunkSize)
@@ -110,9 +108,13 @@ func (b *Book) Pages() ([]site.Page, error) {
 			}
 			pages = append(pages, &Page{
 				number:      p,
+				cover:       cover,
 				meta:        meta,
 				getMangaURL: getMangaURL,
 			})
+			if cover {
+				cover = false
+			}
 		}
 	}
 	return pages, nil
@@ -145,6 +147,7 @@ func (b *Book) Info() *site.BookInfo {
 
 type Page struct {
 	number      int
+	cover       bool
 	getMangaURL func() (*vizapi.MangaURL, error)
 	meta        *vizapi.ChapterMetadata
 }
@@ -170,7 +173,7 @@ func (p *Page) Type() site.PageType {
 			return site.PageTypeSpreadSplit
 		}
 	}
-	if p.number == 0 {
+	if p.cover {
 		return site.PageTypeFrontCover
 	}
 	return site.PageTypeStory

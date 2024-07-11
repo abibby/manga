@@ -16,15 +16,20 @@ package cmd
 
 import (
 	"fmt"
+	"log"
+	"log/slog"
 	"os"
-	"path/filepath"
+	"path"
 
-	homedir "github.com/mitchellh/go-homedir"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
 
 var cfgFile string
+var verbose bool
+
+var home string
+var configRoot string
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
@@ -44,13 +49,21 @@ func Execute() {
 func init() {
 	cobra.OnInitialize(initConfig)
 
+	home, _ := os.UserHomeDir()
+	if home != "" {
+		configRoot = path.Join(home, ".manga")
+	} else {
+		configRoot = "/etc/manga"
+	}
 	// Here you will define your flags and configuration settings.
 	// Cobra supports persistent flags, which, if defined here,
 	// will be global for your application.
-	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.manga.yaml)")
-	rootCmd.PersistentFlags().StringP("dir", "d", filepath.Join(home(), "manga"), "the path to the manga root dir")
-	rootCmd.PersistentFlags().String("cookie_file", filepath.Join(home(), ".manga/cookies.json"), "the path to the cookie file")
-	rootCmd.PersistentFlags().String("", filepath.Join(home(), ".manga/manga.db"), "the path to the database file")
+	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", fmt.Sprintf(`config file (default "%s/config.yaml)"`, configRoot))
+	rootCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "print verbose logging")
+
+	rootCmd.PersistentFlags().StringP("dir", "d", path.Join(home, "manga"), "the path to the manga root dir")
+	rootCmd.PersistentFlags().String("cookie_file", path.Join(configRoot, "cookies.json"), "the path to the cookie file")
+	rootCmd.PersistentFlags().String("database", path.Join(configRoot, "manga.db"), "the path to the database file")
 
 	rootCmd.PersistentFlags().StringP("language", "l", "en", "the language to download chapters in")
 
@@ -70,27 +83,31 @@ func initConfig() {
 		viper.SetConfigFile(cfgFile)
 	} else {
 
-		// Search config in home directory with name ".manga" (without extension).
-		viper.AddConfigPath(filepath.Join(home(), ".manga"))
+		cfg, err := os.UserConfigDir()
+		if err == nil {
+			viper.AddConfigPath(path.Join(cfg, "manga"))
+		}
+		if home != "" {
+			viper.AddConfigPath(path.Join(home, ".manga"))
+		}
 		viper.AddConfigPath("/etc/manga")
 		viper.AddConfigPath(".")
+
 		viper.SetConfigName("config")
 	}
 	// viper.AutomaticEnv() // read in environment variables that match
 
 	// If a config file is found, read it in.
 	if err := viper.ReadInConfig(); err == nil {
-		fmt.Println("Using config file:", viper.ConfigFileUsed())
+		log.Println("Using config file:", viper.ConfigFileUsed())
 	}
 
-}
-func home() string {
-
-	// Find home directory.
-	home, err := homedir.Dir()
-	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
+	level := slog.LevelInfo
+	if verbose {
+		level = slog.LevelDebug - 4
 	}
-	return home
+
+	slog.SetDefault(slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
+		Level: level,
+	})))
 }
