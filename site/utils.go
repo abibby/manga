@@ -30,6 +30,10 @@ func saveImage(page Page, path string) (image.Image, error) {
 
 	defer response.Body.Close()
 
+	if response.StatusCode < 200 || response.StatusCode >= 300 {
+		return nil, fmt.Errorf("image fetch failed with %s", response.Status)
+	}
+
 	var body io.Reader = response.Body
 
 	if decoder, ok := page.(ImageDecrypter); ok {

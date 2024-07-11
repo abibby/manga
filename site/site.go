@@ -169,6 +169,7 @@ func (d *sourceDownload) download() error {
 			d.sortStr(b),
 		)
 	})
+
 	for _, book := range books {
 		if book.Chapter() < d.source.From {
 			continue
@@ -224,7 +225,7 @@ func (d *sourceDownload) sortStr(book Book) string {
 	if volume == 0 {
 		volume = 999
 	}
-	return fmt.Sprintf("%s-%03d-%03f", d.seriesFolder(book), volume, book.Chapter())
+	return fmt.Sprintf("%s-%03d-%06.2f", d.seriesFolder(book), volume, book.Chapter())
 }
 
 func (d *sourceDownload) downloadBook(book Book) error {
@@ -326,8 +327,8 @@ func (d *sourceDownload) downloadBook(book Book) error {
 	if err != nil {
 		return err
 	}
-	file := folder + ".cbz"
 
+	file := folder + ".cbz"
 	err = zipit(folder, file)
 	if err != nil {
 		return err

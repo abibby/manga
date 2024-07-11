@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"regexp"
 	"strconv"
 	"strings"
@@ -100,22 +101,24 @@ type Chapter struct {
 	ID      int
 	Chapter float64
 	URL     string
+	c       *Client
 }
 
 type SeriesInfo struct {
-	Title string
+	Title    string
+	Chapters []*Chapter
 }
 
-func (c *Client) GetChapters(seriesSlug string) ([]*Chapter, *SeriesInfo, error) {
+func (c *Client) GetSeries(seriesSlug string) (*SeriesInfo, error) {
 	resp, err := c.get(c.baseURL + "/shonenjump/chapters/" + seriesSlug)
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 	defer resp.Body.Close()
 
 	// b, err := io.ReadAll(resp.Body)
 	// if err != nil {
-	// 	return nil, nil, err
+	// 	return nil,  err
 	// }
 
 	re := regexp.MustCompile(`/shonenjump/[^/]+/chapter/(\d+)`)
@@ -127,22 +130,21 @@ func (c *Client) GetChapters(seriesSlug string) ([]*Chapter, *SeriesInfo, error)
 
 	d, err := goquery.NewDocumentFromReader(resp.Body)
 	if err != nil {
-		return nil, nil, err
-	}
-
-	seriesInfo := &SeriesInfo{
-		Title: d.Find("#series-intro h2").Text(),
+		return nil, err
 	}
 
 	chaptersLinks := d.Find("a[name]")
 
-	chapters := make([]*Chapter, 0, chaptersLinks.Length())
+	s := &SeriesInfo{
+		Title:    d.Find("#series-intro h2").Text(),
+		Chapters: make([]*Chapter, 0, chaptersLinks.Length()),
+	}
 
 	for _, chapterNode := range chaptersLinks.Nodes {
 		node := d.FindNodes(chapterNode)
 		chapterNumber, err := strconv.ParseFloat(node.AttrOr("name", ""), 64)
 		if err != nil {
-			return nil, nil, fmt.Errorf("failed to parse chapter number: %w", err)
+			return nil, fmt.Errorf("failed to parse chapter number: %w", err)
 		}
 
 		href, _ := node.Attr("href")
@@ -154,20 +156,36 @@ func (c *Client) GetChapters(seriesSlug string) ([]*Chapter, *SeriesInfo, error)
 			href = c.baseURL + re.FindString(onclick)
 		}
 		if href == "" {
-			return nil, nil, fmt.Errorf("cound not find chapter link for chapter %f", chapterNumber)
+			return nil, fmt.Errorf("cound not find chapter link for chapter %f", chapterNumber)
 		}
 		matches := re.FindStringSubmatch(href)
 		id, err := strconv.Atoi(matches[1])
 		if err != nil {
-			return nil, nil, err
+			return nil, err
 		}
 
-		chapters = append(chapters, &Chapter{
+		s.Chapters = append(s.Chapters, &Chapter{
 			ID:      id,
 			Chapter: chapterNumber,
 			URL:     href,
+			c:       c,
 		})
 	}
 
-	return chapters, seriesInfo, nil
+	return s, nil
+}
+func (c *Chapter) GetPageCount() (int, error) {
+	resp, err := c.c.get(c.URL)
+	if err != nil {
+		return 0, err
+	}
+	defer resp.Body.Close()
+
+	responseData, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return 0, err
+	}
+
+	bPageCount := regexp.MustCompile(`var\s+pages\s*=\s*(\d+)`).FindSubmatch(responseData)[1]
+	return strconv.Atoi(string(bPageCount))
 }

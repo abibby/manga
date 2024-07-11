@@ -8,7 +8,6 @@ import (
 	"image/jpeg"
 	"image/png"
 	"io"
-	"log"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -53,17 +52,17 @@ func books(uri string) ([]site.Book, error) {
 	}
 
 	seriesSlug := strings.Split(u.Path, "/")[3]
-	chapters, seriesInfo, err := c.GetChapters(seriesSlug)
+	series, err := c.GetSeries(seriesSlug)
 	if err != nil {
 		return nil, err
 	}
 
-	books := make([]site.Book, len(chapters))
-	for i, chapter := range chapters {
+	books := make([]site.Book, len(series.Chapters))
+	for i, chapter := range series.Chapters {
 		books[i] = &Book{
 			chapter:  chapter,
 			seriesID: seriesSlug,
-			series:   seriesInfo.Title,
+			series:   series.Title,
 			c:        c,
 		}
 	}
@@ -71,60 +70,51 @@ func books(uri string) ([]site.Book, error) {
 }
 
 func (b *Book) Pages() ([]site.Page, error) {
-	pages := []site.Page{}
-
-	pageNumbers := make([]int, 5)
-	current := 0
-	var meta *vizapi.ChapterMetadata
-	for {
-		for i := range pageNumbers {
-			pageNumbers[i] = current + i
-		}
-		current += len(pageNumbers)
-
-		d, err := b.c.GetMangaURL(b.chapter.ID, pageNumbers)
-		if errors.Is(err, vizapi.ErrNotOK) && len(pages) == 0 {
-			err = b.c.Reauthenticate()
-			if err != nil {
-				return nil, err
-			}
-			d, err = b.c.GetMangaURL(b.chapter.ID, pageNumbers)
-		}
-
-		if errors.Is(err, vizapi.ErrNotOK) {
-			if len(pages) == 0 {
-				err = b.c.Reauthenticate()
-				if err != nil {
-					return nil, err
-				}
-
-			}
-			log.Print(err)
-			break
-		} else if err != nil {
+	d, err := b.c.GetMangaURL(b.chapter.ID, []int{0})
+	if errors.Is(err, vizapi.ErrNotOK) {
+		err = b.c.Reauthenticate()
+		if err != nil {
 			return nil, err
 		}
+		d, err = b.c.GetMangaURL(b.chapter.ID, []int{0})
+	}
 
-		if meta == nil {
-			meta, err = d.GetMetadata()
-			if err != nil {
-				return nil, err
+	if err != nil {
+		return nil, err
+	}
+	meta, err := d.GetMetadata()
+	if err != nil {
+		return nil, err
+	}
+
+	pageCount, err := b.chapter.GetPageCount()
+	if err != nil {
+		return nil, err
+	}
+
+	pages := make([]site.Page, 0, pageCount)
+
+	chunkSize := 5
+	for i := 0; i < pageCount; i += chunkSize {
+		getMangaURL := sync.OnceValues(func() (*vizapi.MangaURL, error) {
+			pageNumbers := make([]int, chunkSize)
+			for j := range pageNumbers {
+				pageNumbers[j] = i + j
 			}
-		}
+			return b.c.GetMangaURL(b.chapter.ID, pageNumbers)
+		})
 
-		for _, p := range pageNumbers {
-			pageURL, ok := d.Data[p]
-			if !ok {
-				break
+		for p := i; p < i+5 && p < pageCount; p++ {
+			if i == 0 && (len(meta.Spreads) == 0 || meta.Spreads[0] != 0) {
+				continue
 			}
 			pages = append(pages, &Page{
-				url:    pageURL,
-				number: p,
-				meta:   meta,
+				number:      p,
+				meta:        meta,
+				getMangaURL: getMangaURL,
 			})
 		}
 	}
-
 	return pages, nil
 }
 
@@ -154,9 +144,9 @@ func (b *Book) Info() *site.BookInfo {
 }
 
 type Page struct {
-	url    string
-	number int
-	meta   *vizapi.ChapterMetadata
+	number      int
+	getMangaURL func() (*vizapi.MangaURL, error)
+	meta        *vizapi.ChapterMetadata
 }
 
 var _ site.Page = &Page{}
@@ -164,7 +154,15 @@ var _ site.ImageDecrypter = &Page{}
 var _ site.PageTyper = &Page{}
 
 func (p *Page) URL() (string, error) {
-	return p.url, nil
+	urls, err := p.getMangaURL()
+	if err != nil {
+		return "", err
+	}
+	pageURL, ok := urls.Data[p.number]
+	if !ok {
+		return "", fmt.Errorf("no page %d", p.number)
+	}
+	return pageURL, nil
 }
 func (p *Page) Type() site.PageType {
 	for _, s := range p.meta.Spreads {
