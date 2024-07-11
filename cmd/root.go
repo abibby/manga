@@ -30,8 +30,7 @@ import (
 var cfgFile string
 var verbose bool
 
-var home string
-var configRoot string
+var home, _ = os.UserHomeDir()
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
@@ -51,12 +50,11 @@ func Execute() {
 func init() {
 	cobra.OnInitialize(initConfig)
 
-	home, _ := os.UserHomeDir()
+	configRoot := "/etc/manga"
 	if home != "" {
 		configRoot = path.Join(home, ".manga")
-	} else {
-		configRoot = "/etc/manga"
 	}
+
 	// Here you will define your flags and configuration settings.
 	// Cobra supports persistent flags, which, if defined here,
 	// will be global for your application.
