@@ -21,8 +21,10 @@ import (
 	"os"
 	"path"
 
+	"github.com/davecgh/go-spew/spew"
 	"github.com/lmittmann/tint"
 	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 )
 
@@ -59,21 +61,28 @@ func init() {
 	// Here you will define your flags and configuration settings.
 	// Cobra supports persistent flags, which, if defined here,
 	// will be global for your application.
-	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", fmt.Sprintf(`config file (default "%s/config.yaml)"`, configRoot))
+	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file")
 	rootCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "print verbose logging")
 
-	rootCmd.PersistentFlags().StringP("dir", "d", path.Join(home, "manga"), "the path to the manga root dir")
-	rootCmd.PersistentFlags().String("cookie_file", path.Join(configRoot, "cookies.json"), "the path to the cookie file")
-	rootCmd.PersistentFlags().String("database", path.Join(configRoot, "manga.db"), "the path to the database file")
+	rootCmd.PersistentFlags().StringP("dir", "d", "", "the path to the manga root dir")
+	rootCmd.PersistentFlags().String("cookie_file", "", "the path to the cookie file")
+	rootCmd.PersistentFlags().String("database", "", "the path to the database file")
+	rootCmd.PersistentFlags().StringP("language", "l", "", "the language to download chapters in")
 
-	rootCmd.PersistentFlags().StringP("language", "l", "en", "the language to download chapters in")
-
-	viper.BindPFlag("language", rootCmd.PersistentFlags().Lookup("language"))
+	MustBindPFlag("language", rootCmd.PersistentFlags().Lookup("language"))
 	viper.SetDefault("language", "en")
-	viper.BindPFlag("upload-path", rootCmd.PersistentFlags().Lookup("upload-path"))
-	viper.BindPFlag("dir", rootCmd.PersistentFlags().Lookup("dir"))
-	viper.BindPFlag("cookie_file", rootCmd.PersistentFlags().Lookup("cookie_file"))
-	viper.BindPFlag("database", rootCmd.PersistentFlags().Lookup("database"))
+	MustBindPFlag("dir", rootCmd.PersistentFlags().Lookup("dir"))
+	viper.SetDefault("dir", path.Join(home, "manga"))
+	MustBindPFlag("cookie_file", rootCmd.PersistentFlags().Lookup("cookie_file"))
+	viper.SetDefault("cookie_file", path.Join(configRoot, "cookies.json"))
+	MustBindPFlag("database", rootCmd.PersistentFlags().Lookup("database"))
+	viper.SetDefault("database", path.Join(configRoot, "manga.db"))
+}
+func MustBindPFlag(key string, flag *pflag.Flag) {
+	err := viper.BindPFlag(key, flag)
+	if err != nil {
+		panic(err)
+	}
 }
 
 // initConfig reads in config file and ENV variables if set.
@@ -109,10 +118,16 @@ func initConfig() {
 
 		viper.SetConfigName("config")
 	}
-	// viper.AutomaticEnv() // read in environment variables that match
 
 	// If a config file is found, read it in.
-	if err := viper.ReadInConfig(); err == nil {
-		log.Println("Using config file:", viper.ConfigFileUsed())
+	err = viper.ReadInConfig()
+	if _, ok := err.(viper.ConfigFileNotFoundError); ok {
+		// noop
+	} else if err != nil {
+		slog.Error("error loading config", "err", err)
+	} else {
+		log.Printf("Using config file: %s", viper.ConfigFileUsed())
 	}
+	spew.Dump(viper.AllSettings())
+	os.Exit(1)
 }
