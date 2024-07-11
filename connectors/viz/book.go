@@ -95,17 +95,17 @@ func (b *Book) Pages() ([]site.Page, error) {
 	pages := make([]site.Page, 0, pageCount)
 
 	chunkSize := 5
-	for i := 0; i < pageCount; i += chunkSize {
+	for chunkStart := 0; chunkStart < pageCount; chunkStart += chunkSize {
 		getMangaURL := sync.OnceValues(func() (*vizapi.MangaURL, error) {
 			pageNumbers := make([]int, chunkSize)
 			for j := range pageNumbers {
-				pageNumbers[j] = i + j
+				pageNumbers[j] = chunkStart + j
 			}
 			return b.c.GetMangaURL(b.chapter.ID, pageNumbers)
 		})
 
-		for p := i; p < i+5 && p < pageCount; p++ {
-			if i == 0 && (len(meta.Spreads) == 0 || meta.Spreads[0] != 0) {
+		for p := chunkStart; p < chunkStart+5 && p < pageCount; p++ {
+			if p == 0 && (len(meta.Spreads) == 0 || meta.Spreads[0] != 0) {
 				continue
 			}
 			pages = append(pages, &Page{

@@ -31,7 +31,10 @@ func New(username, password, cookieFile string) (*Client, error) {
 	}
 
 	c := &Client{
-		httpClient: &http.Client{Jar: jar},
+		httpClient: &http.Client{
+			Timeout: time.Second * 10,
+			Jar:     jar,
+		},
 		jar:        jar,
 		cookieFile: cookieFile,
 		baseURL:    "https://www.viz.com",
