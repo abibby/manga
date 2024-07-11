@@ -176,8 +176,9 @@ func (d *sourceDownload) download() error {
 			slog.Debug("chapter too early", "book", d.name(book), "from", d.source.From)
 			continue
 		}
-		if fileExists(d.folder(book) + ".cbz") {
-			slog.Debug("chapter already downloaded", "book", d.name(book))
+		bookFile := d.folder(book) + ".cbz"
+		if fileExists(bookFile) {
+			slog.Debug("chapter already downloaded", "book", d.name(book), "file", bookFile)
 			continue
 		}
 		log.Printf("Downloading %s\n", d.name(book))
@@ -228,7 +229,7 @@ func (d *sourceDownload) sortStr(book Book) string {
 	if volume == 0 {
 		volume = 999
 	}
-	return fmt.Sprintf("%s-%03d-%06.2f", d.seriesFolder(book), volume, book.Chapter())
+	return fmt.Sprintf("%s-%05d-%06.2f", d.seriesFolder(book), volume, book.Chapter())
 }
 
 func (d *sourceDownload) downloadBook(book Book) error {
