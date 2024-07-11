@@ -22,10 +22,10 @@ func NewBook(client *mangadexv5.Client, chapter *mangadexv5.Chapter) *Book {
 	}
 }
 
-func (b *Book) Pages() []site.Page {
+func (b *Book) Pages() ([]site.Page, error) {
 	atHomeServer, err := b.client.AtHomeServer(b.mdChapter.ID)
 	if err != nil {
-		return nil
+		return nil, err
 	}
 
 	pages := []site.Page{}
@@ -33,7 +33,7 @@ func (b *Book) Pages() []site.Page {
 	for i := range atHomeServer.Chapter.Data {
 		pages = append(pages, site.DefaultPage(b.mdChapter.PageURL(atHomeServer, i)))
 	}
-	return pages
+	return pages, nil
 }
 func (b *Book) ID() string {
 	return b.mdChapter.ID

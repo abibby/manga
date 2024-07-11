@@ -18,14 +18,14 @@ import (
 	_ "golang.org/x/image/webp"
 )
 
-func saveImage(site MangaSite, page Page, path string) error {
+func saveImage(page Page, path string) (image.Image, error) {
 	uri, err := page.URL()
 	if err != nil {
-		return err
+		return nil, err
 	}
 	response, err := client.Get(uri)
 	if err != nil {
-		return fmt.Errorf("failed to fetch image: %v", err)
+		return nil, fmt.Errorf("failed to fetch image: %v", err)
 	}
 
 	defer response.Body.Close()
@@ -38,12 +38,12 @@ func saveImage(site MangaSite, page Page, path string) error {
 
 	b, err := io.ReadAll(body)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	_, imgTyp, err := image.Decode(bytes.NewBuffer(b))
+	img, imgTyp, err := image.Decode(bytes.NewBuffer(b))
 	if err != nil {
-		return fmt.Errorf("could not decode image '%s': %v", uri, err)
+		return nil, fmt.Errorf("could not decode image '%s': %v", uri, err)
 	}
 
 	ext := "." + imgTyp
@@ -52,7 +52,7 @@ func saveImage(site MangaSite, page Page, path string) error {
 		path += ext
 	}
 
-	return os.WriteFile(path, b, 0644)
+	return img, os.WriteFile(path, b, 0644)
 }
 
 // from http://blog.ralch.com/tutorial/golang-working-with-zip/

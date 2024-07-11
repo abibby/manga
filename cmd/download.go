@@ -26,10 +26,8 @@ import (
 
 	// Connectors
 	// _ "github.com/abibby/manga/connectors/crunchyroll"
-	_ "github.com/abibby/manga/connectors/jaiminisbox"
 	_ "github.com/abibby/manga/connectors/mangadex"
 	_ "github.com/abibby/manga/connectors/mangaplus"
-	_ "github.com/abibby/manga/connectors/mangarock"
 	_ "github.com/abibby/manga/connectors/viz"
 )
 
@@ -61,9 +59,13 @@ Currently the installed connectors are %s.`, strings.Join(site.ConnectorNames(),
 			}
 		}
 
-		path := viper.GetString("database")
+		mangaPath := viper.GetString("dir")
+		if mangaPath == "" {
+			return fmt.Errorf("must set dir in the config")
+		}
 
-		db, err := site.OpenDB(path)
+		dbPath := viper.GetString("database")
+		db, err := site.OpenDB(dbPath)
 		if err != nil {
 			return err
 		}
@@ -72,7 +74,7 @@ Currently the installed connectors are %s.`, strings.Join(site.ConnectorNames(),
 		for _, s := range sources {
 			fmt.Printf("download %s\n", s.URL)
 
-			err = site.Download(db, s)
+			err = site.Download(db, mangaPath, s)
 			if err != nil {
 				fmt.Fprintf(os.Stderr, "There was an error downloading %s: %+v", s.URL, err)
 			}

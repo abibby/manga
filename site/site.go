@@ -3,16 +3,17 @@ package site
 import (
 	"encoding/json"
 	"fmt"
+	"image"
 	"io"
 	"log"
 	"net/http"
-	"net/url"
 	"os"
+	"path"
+	"path/filepath"
 	fp "path/filepath"
-	"sort"
+	"slices"
+	"strings"
 	"time"
-
-	"github.com/spf13/viper"
 )
 
 type Source struct {
@@ -52,23 +53,43 @@ func (er *ErrorReader) Read([]byte) (int, error) {
 
 // BookInfo is the data that will be put into the book.json file in the cbz
 type BookInfo struct {
-	Series          string    `json:"series,omitempty"`
-	Title           string    `json:"title,omitempty"`
-	Volume          int       `json:"volume,omitempty"`
-	Chapter         float64   `json:"chapter,omitempty"`
-	Summary         string    `json:"summary,omitempty"`
-	Author          string    `json:"author,omitempty"`
-	Web             string    `json:"web,omitempty"`
-	Genre           string    `json:"genre,omitempty"`
-	Tags            string    `json:"tags,omitempty"`
-	CommunityRating float64   `json:"community_rating,omitempty"`
-	DateReleased    time.Time `json:"date_released,omitempty"`
-	Rating          float64   `json:"rating,omitempty"`
-	RightToLeft     bool      `json:"rtl,omitempty"`
+	Series          string      `json:"series,omitempty"`
+	Title           string      `json:"title,omitempty"`
+	Volume          int         `json:"volume,omitempty"`
+	Chapter         float64     `json:"chapter,omitempty"`
+	Summary         string      `json:"summary,omitempty"`
+	Author          string      `json:"author,omitempty"`
+	Web             string      `json:"web,omitempty"`
+	Genre           string      `json:"genre,omitempty"`
+	Tags            string      `json:"tags,omitempty"`
+	CommunityRating float64     `json:"community_rating,omitempty"`
+	DateReleased    time.Time   `json:"date_released,omitempty"`
+	Rating          float64     `json:"rating,omitempty"`
+	RightToLeft     bool        `json:"rtl,omitempty"`
+	Pages           []*InfoPage `json:"pages,omitempty"`
 }
+
+type InfoPage struct {
+	Type   PageType `json:"type"`
+	Height int      `json:"height"`
+	Width  int      `json:"width"`
+}
+
+type PageType string
+
+const (
+	PageTypeFrontCover  = PageType("FrontCover")
+	PageTypeStory       = PageType("Story")
+	PageTypeSpread      = PageType("Spread")
+	PageTypeSpreadSplit = PageType("SpreadSplit")
+	PageTypeDeleted     = PageType("Deleted")
+)
 
 type Page interface {
 	URL() (string, error)
+}
+type PageTyper interface {
+	Type() PageType
 }
 
 // Book represents a book on a site.
@@ -76,7 +97,7 @@ type Page interface {
 // try to defer downloading until the method that needs it is called
 type Book interface {
 	// Pages returns a list of the image URLs of the pages
-	Pages() []Page
+	Pages() ([]Page, error)
 	// ID is a unique representation of the chapter
 	ID() string
 	// Series is the name of the series the chapter belongs to
@@ -105,34 +126,58 @@ func RegisterMangaSite(site MangaSite) {
 	magnaSites = append(magnaSites, site)
 }
 
-// Download downloads all books from a given URL with chapter >= fromChapter
-func Download(db *DB, s *Source) error {
+// ConnectorNames returns a list of the connector names
+func ConnectorNames() []string {
+	names := []string{}
+	for _, connector := range magnaSites {
+		names = append(names, connector.SiteName())
+	}
+	return names
+}
 
+type sourceDownload struct {
+	db     *DB
+	path   string
+	site   MangaSite
+	source *Source
+}
+
+// Download downloads all books from a given URL with chapter >= fromChapter
+func Download(db *DB, path string, s *Source) error {
 	for _, site := range magnaSites {
 		if site.Test(s.URL) {
-			return download(db, site, s)
+			d := &sourceDownload{
+				db:     db,
+				path:   path,
+				site:   site,
+				source: s,
+			}
+			return d.download()
 		}
 	}
 	return fmt.Errorf("no site that matches %s", s.URL)
 }
 
-func download(db *DB, site MangaSite, s *Source) error {
-	books, err := site.Books(s.URL)
+func (d *sourceDownload) download() error {
+	books, err := d.site.Books(d.source.URL)
 	if err != nil {
 		return err
 	}
-	sort.Slice(books, func(i, j int) bool {
-		return folder(db, s, books[i]) < folder(db, s, books[j])
+	slices.SortFunc(books, func(a, b Book) int {
+		return strings.Compare(
+			d.sortStr(a),
+			d.sortStr(b),
+		)
 	})
 	for _, book := range books {
-		if book.Chapter() < s.From {
+		if book.Chapter() < d.source.From {
 			continue
 		}
-		if _, err := os.Stat(folder(db, s, book) + ".cbz"); err == nil {
+		if _, err := os.Stat(d.folder(book) + ".cbz"); err == nil {
 			continue
 		}
-		fmt.Printf("Downloading %s\n", name(db, s, book))
-		err := downloadBook(db, site, s, book)
+		fmt.Printf("Downloading %s\n", d.name(book))
+		err := d.downloadBook(book)
 		if err != nil {
 			fmt.Println(err)
 		}
@@ -140,11 +185,11 @@ func download(db *DB, site MangaSite, s *Source) error {
 	return nil
 }
 
-func bookSeries(db *DB, s *Source, book Book) string {
-	if s.Name != "" {
-		return s.Name
+func (d *sourceDownload) bookSeries(book Book) string {
+	if d.source.Name != "" {
+		return d.source.Name
 	}
-	name, err := db.SeriesName(book)
+	name, err := d.db.SeriesName(book)
 	if err != nil {
 		log.Print(err)
 		return book.Series()
@@ -152,14 +197,13 @@ func bookSeries(db *DB, s *Source, book Book) string {
 	return name
 }
 
-func seriesFolder(db *DB, s *Source, book Book) string {
-	path := viper.GetString("dir")
-	folder := fp.Join(path, bookSeries(db, s, book))
+func (d *sourceDownload) seriesFolder(book Book) string {
+	folder := fp.Join(d.path, d.bookSeries(book))
 	return folder
 }
 
-func name(db *DB, s *Source, book Book) string {
-	name := bookSeries(db, s, book)
+func (d *sourceDownload) name(book Book) string {
+	name := d.bookSeries(book)
 	if book.Volume() != 0 {
 		name += fmt.Sprintf(" V%d", book.Volume())
 	}
@@ -171,50 +215,117 @@ func name(db *DB, s *Source, book Book) string {
 	}
 	return name
 }
-func folder(db *DB, s *Source, book Book) string {
-	folder := fp.Join(seriesFolder(db, s, book), name(db, s, book))
+func (d *sourceDownload) folder(book Book) string {
+	folder := fp.Join(d.seriesFolder(book), d.name(book))
 	return folder
 }
-
-func chapterExists(db *DB, s *Source, book Book) bool {
-	_, err := os.Stat(folder(db, s, book) + ".cbz")
-	return err == nil
+func (d *sourceDownload) sortStr(book Book) string {
+	volume := book.Volume()
+	if volume == 0 {
+		volume = 999
+	}
+	return fmt.Sprintf("%s-%03d-%03f", d.seriesFolder(book), volume, book.Chapter())
 }
 
-func downloadBook(db *DB, site MangaSite, s *Source, book Book) error {
-	folder := folder(db, s, book)
+func (d *sourceDownload) downloadBook(book Book) error {
+	folder := d.folder(book)
 	err := os.MkdirAll(folder, 0777)
 	if err != nil {
 		return err
 	}
-	for i, image := range book.Pages() {
-		uri, err := image.URL()
-		if err != nil {
-			return err
-		}
-		ext := ""
-		u, err := url.Parse(uri)
-		if err != nil {
-			ext = fp.Ext(uri)
+	pages, err := book.Pages()
+	if err != nil {
+		return err
+	}
+
+	info := book.Info()
+	updatePages := info.Pages == nil
+	if updatePages {
+		info.Pages = make([]*InfoPage, len(pages))
+	}
+	existingPages := map[string]string{}
+	pageFiles, err := os.ReadDir(folder)
+	if err != nil {
+		return err
+	}
+
+	for _, file := range pageFiles {
+		name := path.Join(folder, file.Name())
+		ext := filepath.Ext(name)
+		name = strings.TrimSuffix(name, ext)
+		existingPages[name] = name + ext
+	}
+
+	for i, page := range pages {
+		imageBasePath := fp.Join(folder, fmt.Sprintf("%03d", i))
+		var img image.Image
+		if file, ok := existingPages[imageBasePath]; ok {
+			if updatePages {
+				f, err := os.Open(file)
+				if err != nil {
+					return err
+				}
+				img, _, err = image.Decode(f)
+				f.Close()
+				if err != nil {
+					return err
+				}
+			}
 		} else {
-			ext = fp.Ext(u.Path)
+			img, err = saveImage(page, imageBasePath)
+			if err != nil {
+				return err
+			}
 		}
-		imageFile := fp.Join(folder, fmt.Sprintf("%03d%s", i, ext))
-		if _, err := os.Stat(imageFile); err == nil {
-			continue
-		}
-		err = saveImage(site, image, imageFile)
-		if err != nil {
-			return err
+
+		if updatePages {
+			w := img.Bounds().Dx()
+			h := img.Bounds().Dy()
+			var typ PageType
+			if typer, ok := page.(PageTyper); ok {
+				typ = typer.Type()
+			} else if i == 0 {
+				typ = PageTypeFrontCover
+			} else if w > h {
+				typ = PageTypeSpread
+			} else {
+				typ = PageTypeStory
+			}
+			info.Pages[i] = &InfoPage{
+				Width:  w,
+				Height: h,
+				Type:   typ,
+			}
 		}
 	}
-	info := book.Info()
-	info.Series = bookSeries(db, s, book)
+
+	if info.Pages == nil {
+		info.Pages = []*InfoPage{}
+		for i, p := range pages {
+			page := &InfoPage{
+				// Width: ,
+			}
+			if typer, ok := p.(PageTyper); ok {
+				page.Type = typer.Type()
+			} else {
+				if i == 0 {
+					page.Type = PageTypeFrontCover
+				} else {
+					page.Type = PageTypeStory
+				}
+			}
+			info.Pages = append(info.Pages, page)
+		}
+	}
+	info.Series = d.bookSeries(book)
 	b, err := json.MarshalIndent(info, "", "    ")
 	if err != nil {
 		return err
 	}
-	os.WriteFile(fp.Join(folder, "book.json"), b, 0777)
+	err = os.WriteFile(fp.Join(folder, "book.json"), b, 0777)
+	if err != nil {
+		return err
+	}
 	file := folder + ".cbz"
 
 	err = zipit(folder, file)
@@ -227,13 +338,4 @@ func downloadBook(db *DB, site MangaSite, s *Source, book Book) error {
 	}
 
 	return nil
-}
-
-// ConnectorNames returns a list of the connector names
-func ConnectorNames() []string {
-	names := []string{}
-	for _, connector := range magnaSites {
-		names = append(names, connector.SiteName())
-	}
-	return names
 }

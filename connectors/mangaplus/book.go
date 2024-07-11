@@ -34,7 +34,7 @@ func books(uri string) ([]site.Book, error) {
 
 	result, err := mpproto.Get("https://jumpg-webapi.tokyo-cdn.com/api/title_detailV3?title_id=%s", id)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
 	siteBooks := []site.Book{}
@@ -55,10 +55,10 @@ func books(uri string) ([]site.Book, error) {
 	return siteBooks, nil
 }
 
-func (b *Book) Pages() []site.Page {
+func (b *Book) Pages() ([]site.Page, error) {
 	result, err := mpproto.Get("https://jumpg-webapi.tokyo-cdn.com/api/manga_viewer?chapter_id=%s&split=yes&img_quality=high", b.ID())
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
 	pages := []site.Page{}
@@ -68,7 +68,7 @@ func (b *Book) Pages() []site.Page {
 		if pageURL != "" {
 			encKey, err := hex.DecodeString(mp.GetEncryptionKey())
 			if err != nil {
-				panic(err)
+				return nil, err
 			}
 			pages = append(pages, &Page{
 				url:           pageURL,
@@ -77,7 +77,7 @@ func (b *Book) Pages() []site.Page {
 		}
 	}
 
-	return pages
+	return pages, nil
 }
 func (b *Book) ID() string {
 	return fmt.Sprint(b.chapter.GetChapterId())

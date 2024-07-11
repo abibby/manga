@@ -49,6 +49,8 @@ func init() {
 	// will be global for your application.
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.manga.yaml)")
 	rootCmd.PersistentFlags().StringP("dir", "d", filepath.Join(home(), "manga"), "the path to the manga root dir")
+	rootCmd.PersistentFlags().String("cookie_file", filepath.Join(home(), ".manga/cookies.json"), "the path to the cookie file")
+	rootCmd.PersistentFlags().String("", filepath.Join(home(), ".manga/manga.db"), "the path to the database file")
 
 	rootCmd.PersistentFlags().StringP("language", "l", "en", "the language to download chapters in")
 
@@ -56,6 +58,8 @@ func init() {
 	viper.SetDefault("language", "en")
 	viper.BindPFlag("upload-path", rootCmd.PersistentFlags().Lookup("upload-path"))
 	viper.BindPFlag("dir", rootCmd.PersistentFlags().Lookup("dir"))
+	viper.BindPFlag("cookie_file", rootCmd.PersistentFlags().Lookup("cookie_file"))
+	viper.BindPFlag("database", rootCmd.PersistentFlags().Lookup("database"))
 }
 
 // initConfig reads in config file and ENV variables if set.
@@ -72,7 +76,6 @@ func initConfig() {
 		viper.AddConfigPath(".")
 		viper.SetConfigName("config")
 	}
-
 	// viper.AutomaticEnv() // read in environment variables that match
 
 	// If a config file is found, read it in.

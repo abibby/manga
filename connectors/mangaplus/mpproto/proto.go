@@ -14,12 +14,12 @@ func Get(path string, a ...interface{}) (*SuccessResult, error) {
 
 	r, err := http.Get(fmt.Sprintf(path, a...))
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 	defer r.Body.Close()
 	b, err := io.ReadAll(r.Body)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 	resp := &Response{}
 

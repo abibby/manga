@@ -5,6 +5,8 @@ github.com/abibby/mangadexv5 v0.5.0/go.mod h1:z86GUpYzBxy9RAxD9RZ2TfaxYY5ZpVCnbx
 github.com/abibby/nulls v0.0.0-20201012135326-e405c54bf4e5/go.mod h1:Nm6/cK/PYDg+RwGRv5/nAXGJZfu4nGHFp201Dg1HKWQ=
 github.com/abibby/nulls v1.1.0 h1:uGxt4HRs6XHqO0mnqfUZcDNiiVzN8sH66daUd5g0EIE=
 github.com/abibby/nulls v1.1.0/go.mod h1:Nm6/cK/PYDg+RwGRv5/nAXGJZfu4nGHFp201Dg1HKWQ=
+github.com/abibby/salusa v0.12.0 h1:yiJUK9qX6aPVap1sbYXkGTDp4+ChNuqAeq2LHRSwr3U=
+github.com/abibby/salusa v0.12.0/go.mod h1:yfSFzR738NTfpNF1LbEmJ1PcDSK5SYEAvLRr29O9KvQ=
 github.com/andres-erbsen/clock v0.0.0-20160526145045-9e14626cd129/go.mod h1:rFgpPQZYZ8vdbc+48xibu8ALc3yeyd64IhHS+PU6Yyg=
 github.com/andybalholm/cascadia v1.3.2 h1:3Xi6Dw5lHF15JtdcmAHD3i1+T8plmv7BQ/nsViSLyss=
 github.com/andybalholm/cascadia v1.3.2/go.mod h1:7gtRlve5FxPPgIgX36uWBX58OdBsSS6lUvCFb+h7KvU=
