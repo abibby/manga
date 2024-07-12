@@ -57,16 +57,16 @@ func (b *Book) Chapter() float64 {
 	return chapter
 }
 func (b *Book) Volume() int {
-	vol, _ := strconv.Atoi(b.mdChapter.Volume.String())
-	return vol
+	return 0
 }
 func (b *Book) Info() *site.BookInfo {
+	volume, _ := strconv.Atoi(b.mdChapter.Volume.String())
 	info := &site.BookInfo{
 		// Author:    stripCtlAndExtFromUnicode(b.mdChapter.Manga().Author().Name),
 		Series:       stripCtlAndExtFromUnicode(b.mdChapter.Manga().Title.String()),
 		Title:        stripCtlAndExtFromUnicode(b.mdChapter.Title),
 		Chapter:      b.Chapter(),
-		Volume:       b.Volume(),
+		Volume:       volume,
 		DateReleased: b.mdChapter.PublishAt,
 		RightToLeft:  true,
 	}
