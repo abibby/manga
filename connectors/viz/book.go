@@ -8,7 +8,6 @@ import (
 	"image/jpeg"
 	"image/png"
 	"io"
-	"log/slog"
 	"net/url"
 	"strconv"
 	"strings"
@@ -100,7 +99,7 @@ func (b *Book) Pages() ([]site.Page, error) {
 			for j := range pageNumbers {
 				pageNumbers[j] = chunkStart + j
 			}
-			slog.Info("getMangaURL", "chunkStart+5", chunkStart+5, "pageCount", pageCount, "meta", meta)
+
 			return b.c.GetMangaURL(b.chapter.ID, pageNumbers)
 		})
 
