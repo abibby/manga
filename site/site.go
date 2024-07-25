@@ -332,15 +332,15 @@ func (d *sourceDownload) downloadBook(book Book) error {
 		return err
 	}
 
-	file := folder + ".cbz"
-	err = zipit(folder, file)
-	if err != nil {
-		return err
-	}
-	err = os.RemoveAll(folder)
-	if err != nil {
-		return err
-	}
+	// file := folder + ".cbz"
+	// err = zipit(folder, file)
+	// if err != nil {
+	// 	return err
+	// }
+	// err = os.RemoveAll(folder)
+	// if err != nil {
+	// 	return err
+	// }
 
 	return nil
 }
