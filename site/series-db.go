@@ -3,6 +3,7 @@ package site
 import (
 	"os"
 	"path/filepath"
+	"time"
 
 	"go.etcd.io/bbolt"
 )
@@ -19,7 +20,11 @@ func OpenDB(path string) (*DB, error) {
 		return nil, err
 	}
 
-	db, err := bbolt.Open(path, 0666, nil)
+	db, err := bbolt.Open(path, 0666, &bbolt.Options{
+		Timeout:      time.Second * 10,
+		NoGrowSync:   false,
+		FreelistType: bbolt.FreelistArrayType,
+	})
 	if err != nil {
 		return nil, err
 	}
