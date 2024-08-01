@@ -4,12 +4,10 @@ import (
 	"bytes"
 	"fmt"
 	"io"
-	"log"
 	"log/slog"
 	"net/http"
 	"net/http/cookiejar"
 	"net/url"
-	"os/exec"
 	"time"
 )
 
@@ -95,33 +93,33 @@ func (c *Client) doRequest(r *http.Request) (*http.Response, error) {
 		return nil, err
 	}
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		serveOnce(resp)
+		// serveOnce(resp)
 		return nil, fmt.Errorf("request %s %s failed: %s", r.Method, r.URL, resp.Status)
 	}
 	return resp, nil
 }
 
-func serveOnce(resp *http.Response) {
-	var s *http.Server
-	s = &http.Server{
-		Addr: ":7848",
-		Handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			defer func() {
-				resp.Body.Close()
-				go func() {
-					time.Sleep(time.Millisecond * 200)
-					s.Close()
-				}()
-			}()
-			_, err := io.Copy(w, resp.Body)
-			if err != nil {
-				log.Print(err)
-			}
-		}),
-	}
-	_ = exec.Command("open", "http://localhost:7848").Run()
-	err := s.ListenAndServe()
-	if err != nil {
-		log.Print(err)
-	}
-}
+// func serveOnce(resp *http.Response) {
+// 	var s *http.Server
+// 	s = &http.Server{
+// 		Addr: ":7848",
+// 		Handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+// 			defer func() {
+// 				resp.Body.Close()
+// 				go func() {
+// 					time.Sleep(time.Millisecond * 200)
+// 					s.Close()
+// 				}()
+// 			}()
+// 			_, err := io.Copy(w, resp.Body)
+// 			if err != nil {
+// 				log.Print(err)
+// 			}
+// 		}),
+// 	}
+// 	_ = exec.Command("open", "http://localhost:7848").Run()
+// 	err := s.ListenAndServe()
+// 	if err != nil {
+// 		log.Print(err)
+// 	}
+// }
