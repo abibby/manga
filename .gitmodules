@@ -1,0 +1,3 @@
+[submodule "manga-plus-protobuf"]
+	path = manga-plus-protobuf
+	url = git@gitlab.com:David-Stephenson/manga-plus-protobuf.git
