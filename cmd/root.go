@@ -110,7 +110,9 @@ func initConfig() {
 			Level: level,
 		})))
 	}
-
+	if cfgFile == "" {
+		cfgFile = os.Getenv("MANGA_CONFIG_FILE")
+	}
 	if cfgFile != "" {
 		// Use config file from the flag.
 		viper.SetConfigFile(cfgFile)

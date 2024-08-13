@@ -4,7 +4,7 @@ COPY go.mod .
 COPY go.sum .
 RUN go mod download
 COPY . .
-RUN CGO_ENABLED=0 go build -trimpath -o /dist/app
+RUN CGO_ENABLED=0 go build -trimpath -o /dist/manga
 
 # Now copy it into our base image.
 FROM alpine:latest AS certs
@@ -17,4 +17,4 @@ COPY --from=certs /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certifica
 
 COPY --from=builder /dist /
 
-ENTRYPOINT ["/app", "watch"]
+ENTRYPOINT ["/manga", "watch"]
