@@ -53,7 +53,7 @@ var ErrNotOK = errors.New("not OK")
 
 func (c *Client) GetMangaURL(mangaID int, pages []int) (*MangaURL, error) {
 	uri := fmt.Sprintf("https://www.viz.com/manga/get_manga_url?device_id=3&manga_id=%d&pages=%s", mangaID, join(pages, ","))
-	// log.Print(uri)
+
 	resp, err := c.get(uri)
 	if err != nil {
 		return nil, err

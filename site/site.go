@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"image"
 	"io"
-	"log"
 	"log/slog"
 	"net/http"
 	"os"
@@ -181,10 +180,10 @@ func (d *sourceDownload) download() error {
 			slog.Debug("chapter already downloaded", "book", d.name(book), "file", bookFile)
 			continue
 		}
-		log.Printf("Downloading %s\n", d.name(book))
+		slog.Info("Downloading book", "name", d.name(book))
 		err := d.downloadBook(book)
 		if err != nil {
-			log.Println(err)
+			slog.Error("Failed to download book", "name", d.name(book), "err", err)
 		}
 	}
 	return nil
@@ -196,7 +195,7 @@ func (d *sourceDownload) bookSeries(book Book) string {
 	}
 	name, err := d.db.SeriesName(book)
 	if err != nil {
-		log.Print(err)
+		slog.Warn("Could not find series name in database", "err", err)
 		return book.Series()
 	}
 	return name

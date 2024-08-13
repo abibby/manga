@@ -16,11 +16,11 @@ package cmd
 
 import (
 	"fmt"
-	"log"
 	"log/slog"
 	"os"
 	"path"
 
+	"github.com/fsnotify/fsnotify"
 	"github.com/lmittmann/tint"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
@@ -30,7 +30,16 @@ import (
 var cfgFile string
 var verbose bool
 
-var home, _ = os.UserHomeDir()
+var home string
+
+func init() {
+	h, err := os.UserHomeDir()
+	if err != nil {
+		home = "/"
+	} else {
+		home = h
+	}
+}
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
@@ -51,7 +60,7 @@ func init() {
 	cobra.OnInitialize(initConfig)
 
 	configRoot := "/etc/manga"
-	if home != "" {
+	if home != "/" {
 		configRoot = path.Join(home, ".manga")
 	}
 
@@ -92,11 +101,15 @@ func initConfig() {
 
 	fi, err := os.Stdout.Stat()
 	isTTY := err == nil && (fi.Mode()&os.ModeCharDevice) != 0
-
-	slog.SetDefault(slog.New(tint.NewHandler(os.Stdout, &tint.Options{
-		Level:   level,
-		NoColor: !isTTY,
-	})))
+	if isTTY {
+		slog.SetDefault(slog.New(tint.NewHandler(os.Stdout, &tint.Options{
+			Level: level,
+		})))
+	} else {
+		slog.SetDefault(slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
+			Level: level,
+		})))
+	}
 
 	if cfgFile != "" {
 		// Use config file from the flag.
@@ -107,7 +120,7 @@ func initConfig() {
 		if err == nil {
 			viper.AddConfigPath(path.Join(cfg, "manga"))
 		}
-		if home != "" {
+		if home != "/" {
 			viper.AddConfigPath(path.Join(home, ".manga"))
 		}
 		viper.AddConfigPath("/etc/manga")
@@ -123,6 +136,10 @@ func initConfig() {
 	} else if err != nil {
 		slog.Error("error loading config", "err", err)
 	} else {
-		log.Printf("Using config file: %s", viper.ConfigFileUsed())
+		slog.Info("Using config file", "file", viper.ConfigFileUsed())
 	}
+	viper.OnConfigChange(func(e fsnotify.Event) {
+		slog.Info("Config file changed", "file", e.Name)
+	})
+	viper.WatchConfig()
 }

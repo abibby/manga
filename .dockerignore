@@ -1,3 +1,5 @@
+Dockerfile
+.gitignore
 config.yml
 .vscode
 manga

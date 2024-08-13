@@ -1,0 +1,7 @@
+services:
+  manga:
+    build:
+      context: .
+    volumes:
+      - ./dc-cfg:/etc/manga
+      - ./manga:/manga

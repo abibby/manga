@@ -16,8 +16,7 @@ package cmd
 
 import (
 	"fmt"
-	"log"
-	"os"
+	"log/slog"
 	"strconv"
 	"strings"
 
@@ -42,12 +41,7 @@ Manga can download from any site that has a connector setup.
 Currently the installed connectors are %s.`, strings.Join(site.ConnectorNames(), ", ")),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		sources := []*site.Source{}
-		if len(args) == 0 {
-			err := viper.UnmarshalKey("sources", &sources)
-			if err != nil {
-				return err
-			}
-		} else {
+		if len(args) > 0 {
 			from, err := strconv.ParseFloat(cmd.Flag("from").Value.String(), 64)
 			if err != nil {
 				return err
@@ -59,28 +53,7 @@ Currently the installed connectors are %s.`, strings.Join(site.ConnectorNames(),
 				})
 			}
 		}
-
-		mangaPath := viper.GetString("dir")
-		if mangaPath == "" {
-			return fmt.Errorf("must set dir in the config")
-		}
-
-		dbPath := viper.GetString("database")
-		db, err := site.OpenDB(dbPath)
-		if err != nil {
-			return err
-		}
-		defer db.Close()
-
-		for _, s := range sources {
-			log.Printf("download %s\n", s.URL)
-
-			err = site.Download(db, mangaPath, s)
-			if err != nil {
-				fmt.Fprintf(os.Stderr, "There was an error downloading %s: %+v", s.URL, err)
-			}
-		}
-		return nil
+		return download(sources)
 	},
 }
 
@@ -88,4 +61,34 @@ func init() {
 	rootCmd.AddCommand(downloadCmd)
 
 	downloadCmd.Flags().IntP("from", "f", 0, "the chapter to start downloading, inclusive")
+}
+
+func download(sources []*site.Source) error {
+	if len(sources) == 0 {
+		err := viper.UnmarshalKey("sources", &sources)
+		if err != nil {
+			return err
+		}
+	}
+	mangaPath := viper.GetString("dir")
+	if mangaPath == "" {
+		return fmt.Errorf("must set dir in the config")
+	}
+
+	dbPath := viper.GetString("database")
+	db, err := site.OpenDB(dbPath)
+	if err != nil {
+		return err
+	}
+	defer db.Close()
+
+	for _, s := range sources {
+		slog.Info("Downloading source", "url", s.URL)
+
+		err = site.Download(db, mangaPath, s)
+		if err != nil {
+			slog.Error("Error downloading", "url", s.URL, "err", err)
+		}
+	}
+	return nil
 }

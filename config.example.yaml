@@ -1,0 +1,24 @@
+database: /path/to/db.db
+dir: /path/to/manga/library
+cookie_file: /path/to/cookies.json
+
+viz:
+  username: viz_email@example.com
+  password: viz_password
+mangadex:
+  username: mangadex_email@example.com
+  password: mangadex_password
+
+language: en
+
+watch:
+  frequency: 1h
+
+sources:
+  - url: https://mangadex.org/titles/feed
+
+  - name: One Piece
+    url: https://mangaplus.shueisha.co.jp/titles/100020
+
+  - name: One-Punch Man
+    url: https://www.viz.com/shonenjump/chapters/one-punch-man\?locale\=en

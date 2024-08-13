@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
+	"log/slog"
 	"net/http"
 	"net/url"
 	"os"
@@ -33,7 +33,7 @@ func (c *Client) loadCookies() error {
 }
 
 func (c *Client) Reauthenticate() error {
-	log.Print("New login")
+	slog.Info("Viz new login")
 	err := c.updateCSRF()
 	if err != nil {
 		return err
