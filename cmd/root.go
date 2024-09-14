@@ -23,7 +23,6 @@ import (
 	"github.com/fsnotify/fsnotify"
 	"github.com/lmittmann/tint"
 	"github.com/spf13/cobra"
-	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 )
 
@@ -71,21 +70,23 @@ func init() {
 	rootCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "print verbose logging")
 
 	rootCmd.PersistentFlags().StringP("dir", "d", "", "the path to the manga root dir")
-	rootCmd.PersistentFlags().String("cookie_file", "", "the path to the cookie file")
-	rootCmd.PersistentFlags().String("database", "", "the path to the database file")
-	rootCmd.PersistentFlags().StringP("language", "l", "", "the language to download chapters in")
-
-	MustBindPFlag("language", rootCmd.PersistentFlags().Lookup("language"))
-	viper.SetDefault("language", "en")
-	MustBindPFlag("dir", rootCmd.PersistentFlags().Lookup("dir"))
+	MustBindPFlag("dir", "dir")
 	viper.SetDefault("dir", path.Join(home, "manga"))
-	MustBindPFlag("cookie_file", rootCmd.PersistentFlags().Lookup("cookie_file"))
+
+	rootCmd.PersistentFlags().String("cookie_file", "", "the path to the cookie file")
+	MustBindPFlag("cookie_file", "cookie_file")
 	viper.SetDefault("cookie_file", path.Join(configRoot, "cookies.json"))
-	MustBindPFlag("database", rootCmd.PersistentFlags().Lookup("database"))
+
+	rootCmd.PersistentFlags().String("database", "", "the path to the database file")
+	MustBindPFlag("database", "database")
 	viper.SetDefault("database", path.Join(configRoot, "manga.db"))
+
+	rootCmd.PersistentFlags().StringP("language", "l", "", "the language to download chapters in")
+	MustBindPFlag("language", "language")
+	viper.SetDefault("language", "en")
 }
-func MustBindPFlag(key string, flag *pflag.Flag) {
-	err := viper.BindPFlag(key, flag)
+func MustBindPFlag(configKey, flagName string) {
+	err := viper.BindPFlag(configKey, rootCmd.PersistentFlags().Lookup(flagName))
 	if err != nil {
 		panic(err)
 	}
