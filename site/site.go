@@ -66,6 +66,7 @@ type BookInfo struct {
 	DateReleased    time.Time   `json:"date_released,omitempty"`
 	Rating          float64     `json:"rating,omitempty"`
 	RightToLeft     bool        `json:"rtl,omitempty"`
+	LongStrip       bool        `json:"long_strip,omitempty"`
 	Pages           []*InfoPage `json:"pages,omitempty"`
 }
 

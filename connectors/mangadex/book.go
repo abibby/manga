@@ -69,7 +69,17 @@ func (b *Book) Info() *site.BookInfo {
 		Volume:       volume,
 		DateReleased: b.mdChapter.PublishAt,
 		RightToLeft:  true,
+		LongStrip:    b.isLongStrip(),
 	}
 
 	return info
+}
+
+func (b *Book) isLongStrip() bool {
+	for _, tag := range b.mdChapter.Manga().Tags {
+		if tag.Attributes.Name["en"] == "Long Strip" {
+			return true
+		}
+	}
+	return false
 }

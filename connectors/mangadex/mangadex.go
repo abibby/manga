@@ -105,10 +105,15 @@ func mangaDexDownload(rawurl string, from int64) ([]site.Book, error) {
 }
 
 func mangaDexDownloadSeries(id string, from int64) ([]site.Book, error) {
+	var err error
 	c := mangadexv5.NewClient()
-	err := c.Authenticate(viper.GetString("mangadex.username"), viper.GetString("mangadex.password"), "./md-token.json")
-	if err != nil {
-		return nil, err
+	user := viper.GetString("mangadex.username")
+	pass := viper.GetString("mangadex.password")
+	if user != "" && pass != "" {
+		err = c.Authenticate(user, pass, "./md-token.json")
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	var chapters []*mangadexv5.Chapter
