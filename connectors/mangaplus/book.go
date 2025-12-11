@@ -17,6 +17,7 @@ import (
 type Book struct {
 	title   *mpproto.TitleDetailView
 	chapter *mpproto.Chapter
+	viewer  *mpproto.MangaViewer
 }
 
 var _ site.Book = &Book{}
@@ -55,14 +56,25 @@ func books(uri string) ([]site.Book, error) {
 	return siteBooks, nil
 }
 
+func (b *Book) getMangaViewer() (*mpproto.MangaViewer, error) {
+	if b.viewer == nil {
+		result, err := mpproto.Get("https://jumpg-webapi.tokyo-cdn.com/api/manga_viewer?chapter_id=%s&split=yes&img_quality=high", b.ID())
+		if err != nil {
+			return nil, err
+		}
+		b.viewer = result.GetMangaViewer()
+	}
+	return b.viewer, nil
+}
+
 func (b *Book) Pages() ([]site.Page, error) {
-	result, err := mpproto.Get("https://jumpg-webapi.tokyo-cdn.com/api/manga_viewer?chapter_id=%s&split=yes&img_quality=high", b.ID())
+	result, err := b.getMangaViewer()
 	if err != nil {
 		return nil, err
 	}
 
 	pages := []site.Page{}
-	for _, page := range result.GetMangaViewer().GetPages() {
+	for _, page := range result.GetPages() {
 		mp := page.GetMangaPage()
 		pageURL := mp.GetImageUrl()
 		if pageURL != "" {
@@ -99,6 +111,28 @@ func (b *Book) Volume() int {
 	return 0
 }
 func (b *Book) Info() *site.BookInfo {
+	manga, err := b.getMangaViewer()
+	if err != nil {
+		panic(fmt.Errorf("mangaplus book info: %w", err))
+	}
+
+	pages := make([]*site.InfoPage, len(manga.GetPages()))
+	for i, p := range manga.GetPages() {
+		pages[i] = &site.InfoPage{
+			Type: site.PageTypeStory,
+		}
+		if i == 0 {
+			pages[i].Type = site.PageTypeFrontCover
+		}
+		mp := p.GetMangaPage()
+		switch mp.GetType() {
+		case mpproto.Page_LEFT, mpproto.Page_RIGHT:
+			pages[i].Type = site.PageTypeSpreadSplit
+		case mpproto.Page_DOUBLE:
+			pages[i].Type = site.PageTypeSpread
+		}
+	}
+
 	return &site.BookInfo{
 		Series:       b.Series(),
 		Title:        b.chapter.GetSubTitle(),
@@ -109,6 +143,7 @@ func (b *Book) Info() *site.BookInfo {
 		Web:          fmt.Sprintf("https://mangaplus.shueisha.co.jp/viewer/%d", b.chapter.GetChapterId()),
 		DateReleased: time.Unix(int64(b.chapter.GetStartTimeStamp()), 0),
 		RightToLeft:  true,
+		Pages:        pages,
 	}
 }
 
