@@ -18,20 +18,21 @@ import (
 	_ "golang.org/x/image/webp"
 )
 
-func saveImage(page Page, path string) (image.Image, error) {
+func saveImage(page Page, path string) (image.Config, error) {
 	uri, err := page.URL()
 	if err != nil {
-		return nil, err
+		return image.Config{}, err
 	}
+
 	response, err := client.Get(uri)
 	if err != nil {
-		return nil, fmt.Errorf("failed to fetch image: %v", err)
+		return image.Config{}, fmt.Errorf("failed to fetch image: %v", err)
 	}
 
 	defer response.Body.Close()
 
 	if response.StatusCode < 200 || response.StatusCode >= 300 {
-		return nil, fmt.Errorf("image fetch failed with %s", response.Status)
+		return image.Config{}, fmt.Errorf("image fetch failed with %s", response.Status)
 	}
 
 	var body io.Reader = response.Body
@@ -42,12 +43,12 @@ func saveImage(page Page, path string) (image.Image, error) {
 
 	b, err := io.ReadAll(body)
 	if err != nil {
-		return nil, err
+		return image.Config{}, err
 	}
 
-	img, imgTyp, err := image.Decode(bytes.NewBuffer(b))
+	cfg, imgTyp, err := image.DecodeConfig(bytes.NewBuffer(b))
 	if err != nil {
-		return nil, fmt.Errorf("could not decode image '%s': %v", uri, err)
+		return image.Config{}, fmt.Errorf("could not decode image '%s': %v", uri, err)
 	}
 
 	ext := "." + imgTyp
@@ -56,7 +57,7 @@ func saveImage(page Page, path string) (image.Image, error) {
 		path += ext
 	}
 
-	return img, os.WriteFile(path, b, 0644)
+	return cfg, os.WriteFile(path, b, 0644)
 }
 
 // from http://blog.ralch.com/tutorial/golang-working-with-zip/

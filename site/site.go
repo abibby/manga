@@ -71,9 +71,9 @@ type BookInfo struct {
 }
 
 type InfoPage struct {
-	Type   PageType `json:"type"`
-	Height int      `json:"height"`
-	Width  int      `json:"width"`
+	Type   PageType `json:"type,omitempty"`
+	Height int      `json:"height,omitempty"`
+	Width  int      `json:"width,omitempty"`
 }
 
 type PageType string
@@ -234,7 +234,7 @@ func (d *sourceDownload) sortStr(book Book) string {
 
 func (d *sourceDownload) downloadBook(book Book) error {
 	folder := d.folder(book)
-	err := os.MkdirAll(folder, 0777)
+	err := os.MkdirAll(folder, 0775)
 	if err != nil {
 		return err
 	}
@@ -263,29 +263,29 @@ func (d *sourceDownload) downloadBook(book Book) error {
 
 	for i, page := range pages {
 		imageBasePath := fp.Join(folder, fmt.Sprintf("%03d", i))
-		var img image.Image
+		var cfg image.Config
 		if file, ok := existingPages[imageBasePath]; ok {
 			if updatePages {
 				f, err := os.Open(file)
 				if err != nil {
 					return err
 				}
-				img, _, err = image.Decode(f)
+				cfg, _, err = image.DecodeConfig(f)
 				f.Close()
 				if err != nil {
 					return err
 				}
 			}
 		} else {
-			img, err = saveImage(page, imageBasePath)
+			cfg, err = saveImage(page, imageBasePath)
 			if err != nil {
 				return err
 			}
 		}
 
 		if updatePages {
-			w := img.Bounds().Dx()
-			h := img.Bounds().Dy()
+			w := cfg.Width
+			h := cfg.Height
 			var typ PageType
 			if typer, ok := page.(PageTyper); ok {
 				typ = typer.Type()
