@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"image"
-	"image/jpeg"
 	"image/png"
 	"io"
 	"net/url"
@@ -192,7 +191,7 @@ func (p *Page) ImageDecrypt(encrypted io.Reader) io.Reader {
 			return err
 		}
 
-		src, err := jpeg.Decode(bytes.NewReader(srcBytes))
+		src, _, err := image.Decode(bytes.NewReader(srcBytes))
 		if err != nil {
 			return err
 		}
