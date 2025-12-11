@@ -15,7 +15,7 @@ type DB struct {
 func OpenDB(path string) (*DB, error) {
 	dir := filepath.Dir(path)
 
-	err := os.MkdirAll(dir, 0660)
+	err := os.MkdirAll(dir, 0775)
 	if err != nil {
 		return nil, err
 	}

@@ -71,9 +71,9 @@ type BookInfo struct {
 }
 
 type InfoPage struct {
-	Type   PageType `json:"type"`
-	Height int      `json:"height"`
-	Width  int      `json:"width"`
+	Type   PageType `json:"type,omitempty"`
+	Height int      `json:"height,omitempty"`
+	Width  int      `json:"width,omitempty"`
 }
 
 type PageType string
@@ -234,7 +234,7 @@ func (d *sourceDownload) sortStr(book Book) string {
 
 func (d *sourceDownload) downloadBook(book Book) error {
 	folder := d.folder(book)
-	err := os.MkdirAll(folder, 0777)
+	err := os.MkdirAll(folder, 0775)
 	if err != nil {
 		return err
 	}
