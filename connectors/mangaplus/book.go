@@ -74,7 +74,7 @@ func (b *Book) Pages() ([]site.Page, error) {
 	}
 
 	pages := []site.Page{}
-	for _, page := range result.GetPages() {
+	for i, page := range result.GetPages() {
 		mp := page.GetMangaPage()
 		pageURL := mp.GetImageUrl()
 		if pageURL != "" {
@@ -82,9 +82,23 @@ func (b *Book) Pages() ([]site.Page, error) {
 			if err != nil {
 				return nil, err
 			}
+
+			pageType := site.PageTypeStory
+			if i == 0 {
+				pageType = site.PageTypeFrontCover
+			}
+
+			switch mp.GetType() {
+			case mpproto.Page_LEFT, mpproto.Page_RIGHT:
+				pageType = site.PageTypeSpreadSplit
+			case mpproto.Page_DOUBLE:
+				pageType = site.PageTypeSpread
+			}
+
 			pages = append(pages, &Page{
 				url:           pageURL,
 				encryptionKey: encKey,
+				pageType:      pageType,
 			})
 		}
 	}
@@ -111,25 +125,14 @@ func (b *Book) Volume() int {
 	return 0
 }
 func (b *Book) Info() *site.BookInfo {
-	manga, err := b.getMangaViewer()
+	bookPages, err := b.Pages()
 	if err != nil {
-		panic(fmt.Errorf("mangaplus book info: %w", err))
+		panic(fmt.Errorf("failed to fetch pages: %w", err))
 	}
-
-	pages := make([]*site.InfoPage, len(manga.GetPages()))
-	for i, p := range manga.GetPages() {
+	pages := make([]*site.InfoPage, len(bookPages))
+	for i, p := range bookPages {
 		pages[i] = &site.InfoPage{
-			Type: site.PageTypeStory,
-		}
-		if i == 0 {
-			pages[i].Type = site.PageTypeFrontCover
-		}
-		mp := p.GetMangaPage()
-		switch mp.GetType() {
-		case mpproto.Page_LEFT, mpproto.Page_RIGHT:
-			pages[i].Type = site.PageTypeSpreadSplit
-		case mpproto.Page_DOUBLE:
-			pages[i].Type = site.PageTypeSpread
+			Type: p.(*Page).pageType,
 		}
 	}
 
@@ -150,6 +153,7 @@ func (b *Book) Info() *site.BookInfo {
 type Page struct {
 	url           string
 	encryptionKey []byte
+	pageType      site.PageType
 }
 
 var _ site.Page = &Page{}
@@ -170,7 +174,7 @@ func (p *Page) ImageDecrypt(encrypted io.Reader) io.Reader {
 			if err != nil {
 				return err
 			}
-			for i := 0; i < n; i++ {
+			for i := range n {
 				b[i] ^= p.encryptionKey[i]
 			}
 			_, err = w.Write(b)
