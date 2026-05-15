@@ -5,14 +5,33 @@ import (
 	"io"
 	"net/http"
 
+	"github.com/google/uuid"
 	proto "google.golang.org/protobuf/proto"
 )
 
 //go:generate protoc --go_out=.. mpproto.proto
 
-func Get(path string, a ...interface{}) (*SuccessResult, error) {
+type Client struct {
+	sessionToken string
+	httpClient   *http.Client
+}
 
-	r, err := http.Get(fmt.Sprintf(path, a...))
+func NewClient(c *http.Client) *Client {
+	return &Client{
+		sessionToken: uuid.New().String(),
+		httpClient:   c,
+	}
+}
+
+func (c *Client) Get(path string, a ...interface{}) (*SuccessResult, error) {
+	req, err := http.NewRequest("GET", fmt.Sprintf(path, a...), http.NoBody)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("SESSION-TOKEN", c.sessionToken)
+
+	r, err := c.httpClient.Do(req)
 	if err != nil {
 		return nil, err
 	}

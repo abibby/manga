@@ -9,6 +9,8 @@ import (
 	"net/http/cookiejar"
 	"net/url"
 	"time"
+
+	"github.com/abibby/manga/services/httpratelimit"
 )
 
 type Client struct {
@@ -31,8 +33,9 @@ func New(username, password, cookieFile string) (*Client, error) {
 
 	c := &Client{
 		httpClient: &http.Client{
-			Timeout: time.Second * 10,
-			Jar:     jar,
+			Timeout:   time.Second * 10,
+			Jar:       jar,
+			Transport: httpratelimit.NewThrottledTransport(5 * time.Second),
 		},
 		jar:        jar,
 		cookieFile: cookieFile,

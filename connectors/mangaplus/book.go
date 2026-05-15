@@ -18,11 +18,13 @@ type Book struct {
 	title   *mpproto.TitleDetailView
 	chapter *mpproto.Chapter
 	viewer  *mpproto.MangaViewer
+
+	client *mpproto.Client
 }
 
 var _ site.Book = &Book{}
 
-func books(uri string) ([]site.Book, error) {
+func (m *MangaPlus) books(uri string) ([]site.Book, error) {
 	u, err := url.Parse(uri)
 	if err != nil {
 		return nil, err
@@ -33,7 +35,7 @@ func books(uri string) ([]site.Book, error) {
 	}
 	id := parts[1]
 
-	result, err := mpproto.Get("https://jumpg-webapi.tokyo-cdn.com/api/title_detailV3?title_id=%s", id)
+	result, err := m.client.Get("https://jumpg-webapi.tokyo-cdn.com/api/title_detailV3?title_id=%s", id)
 	if err != nil {
 		return nil, err
 	}
@@ -44,12 +46,14 @@ func books(uri string) ([]site.Book, error) {
 			siteBooks = append(siteBooks, &Book{
 				title:   result.GetTitleDetailView(),
 				chapter: ch,
+				client:  m.client,
 			})
 		}
 		for _, ch := range chapterList.GetLastChapters() {
 			siteBooks = append(siteBooks, &Book{
 				title:   result.GetTitleDetailView(),
 				chapter: ch,
+				client:  m.client,
 			})
 		}
 	}
@@ -58,7 +62,7 @@ func books(uri string) ([]site.Book, error) {
 
 func (b *Book) getMangaViewer() (*mpproto.MangaViewer, error) {
 	if b.viewer == nil {
-		result, err := mpproto.Get("https://jumpg-webapi.tokyo-cdn.com/api/manga_viewer?chapter_id=%s&split=yes&img_quality=high", b.ID())
+		result, err := b.client.Get("https://jumpg-webapi.tokyo-cdn.com/api/manga_viewer?chapter_id=%s&split=yes&img_quality=high", b.ID())
 		if err != nil {
 			return nil, err
 		}

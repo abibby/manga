@@ -261,8 +261,8 @@ func (p *Page) ImageDecrypt(encrypted io.Reader) io.Reader {
 }
 
 func copyRect(src image.Image, dest *image.RGBA, srcX, srcY, destX, destY, w, h int) {
-	for x := 0; x < w; x++ {
-		for y := 0; y < h; y++ {
+	for x := range w {
+		for y := range h {
 			dest.Set(destX+x, destY+y, src.At(srcX+x, srcY+y))
 		}
 	}

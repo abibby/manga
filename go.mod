@@ -8,6 +8,7 @@ require (
 	github.com/PuerkitoBio/goquery v1.11.0
 	github.com/abibby/mangadexv5 v0.5.0
 	github.com/fsnotify/fsnotify v1.9.0
+	github.com/google/uuid v1.6.0
 	github.com/lmittmann/tint v1.1.2
 	github.com/rwcarlsen/goexif v0.0.0-20190401172101-9e8deecbddbd
 	github.com/spf13/cobra v1.10.2
