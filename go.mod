@@ -1,8 +1,6 @@
 module github.com/abibby/manga
 
-go 1.24.0
-
-toolchain go1.24.4
+go 1.25.0
 
 require (
 	github.com/PuerkitoBio/goquery v1.11.0
@@ -15,8 +13,8 @@ require (
 	github.com/spf13/viper v1.21.0
 	github.com/stretchr/testify v1.11.1
 	go.etcd.io/bbolt v1.4.3
-	golang.org/x/image v0.34.0
-	golang.org/x/text v0.32.0
+	golang.org/x/image v0.38.0
+	golang.org/x/text v0.35.0
 	google.golang.org/protobuf v1.36.10
 )
 
