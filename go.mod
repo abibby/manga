@@ -13,8 +13,8 @@ require (
 	github.com/spf13/viper v1.21.0
 	github.com/stretchr/testify v1.11.1
 	go.etcd.io/bbolt v1.4.3
-	golang.org/x/image v0.38.0
-	golang.org/x/text v0.35.0
+	golang.org/x/image v0.41.0
+	golang.org/x/text v0.37.0
 	google.golang.org/protobuf v1.36.10
 )
 
