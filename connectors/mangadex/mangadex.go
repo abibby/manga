@@ -168,7 +168,7 @@ func downloadChapters(c *mangadexv5.Client, chapters []*mangadexv5.Chapter) ([]s
 	books := []site.Book{}
 
 	for _, chapter := range chapters {
-		if chapter.Pages > 0 {
+		if chapter.Pages > 0 && chapter.ExternalURL == nil {
 			books = append(books, NewBook(c, chapter))
 		}
 	}
