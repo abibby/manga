@@ -68,7 +68,7 @@ func (b *Book) Info() *site.BookInfo {
 		Chapter:      b.Chapter(),
 		Volume:       volume,
 		DateReleased: b.mdChapter.PublishAt,
-		RightToLeft:  true,
+		RightToLeft:  isRTL(b.mdChapter.Manga().OriginalLanguage),
 		LongStrip:    b.isLongStrip(),
 	}
 
@@ -82,4 +82,13 @@ func (b *Book) isLongStrip() bool {
 		}
 	}
 	return false
+}
+
+func isRTL(lang string) bool {
+	switch lang {
+	case "ja", "ko":
+		return true
+	default:
+		return false
+	}
 }
