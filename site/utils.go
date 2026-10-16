@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"image"
 	"io"
+	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
@@ -24,7 +25,14 @@ func saveImage(page Page, path string) (image.Config, error) {
 		return image.Config{}, err
 	}
 
-	response, err := client.Get(uri)
+	request, err := http.NewRequest(http.MethodGet, uri, nil)
+	if err != nil {
+		return image.Config{}, fmt.Errorf("invalid image URL: %w", err)
+	}
+	if provider, ok := page.(ImageHeaderProvider); ok {
+		request.Header = provider.ImageHeaders().Clone()
+	}
+	response, err := client.Do(request)
 	if err != nil {
 		return image.Config{}, fmt.Errorf("failed to fetch image: %v", err)
 	}

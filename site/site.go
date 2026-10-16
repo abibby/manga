@@ -89,6 +89,12 @@ const (
 type Page interface {
 	URL() (string, error)
 }
+
+// ImageHeaderProvider supplies headers required to download a page image.
+type ImageHeaderProvider interface {
+	ImageHeaders() http.Header
+}
+
 type PageTyper interface {
 	Type() PageType
 }
